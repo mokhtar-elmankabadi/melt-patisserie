@@ -98,4 +98,4 @@ A.saveOpenings=async()=>{for(const t of S.treasuries){const v=num('to-'+t.id);if
  const {data}=await sb.auth.getSession();if(data.session)afterLogin(false);else showLogin()})();
 A_AUTH.setNewPwd=async()=>{const p=val('np-p');if(p.length<8){toast('8 حروف على الأقل');return}const {error}=await sb.auth.updateUser({password:p});if(error){toast(error.message);return}toast('اتغيرت كلمة السر');afterLogin(true)};
 A.setNewPwd=A_AUTH.setNewPwd;
-window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);const s=SCREENS.find(x=>x.id===h);if(s&&s.b===1&&h!==VIEW&&!LOCKED){VIEW=h;render()}});
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);const s=SCREENS.find(x=>x.id===h);if(s&&s.b<=APP_BATCH&&h!==VIEW&&!LOCKED){VIEW=h;render()}});

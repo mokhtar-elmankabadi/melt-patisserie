@@ -60,11 +60,11 @@ const svg=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const MARK='<path d="M5 20h14"/><path d="M6 20v-6a6 6 0 0 1 12 0v6"/><path d="M9 14c1 1.2 2 1.2 3 0s2-1.2 3 0"/><path d="M12 5V3M8.5 6.2 7.5 4.6M15.5 6.2l1-1.6"/>';
 const tip=t=>` data-tip="${esc(t)}"`;
 const ti=t=>`<button type="button" class="ti" data-tip="${esc(t)}" data-a="tipShow" aria-label="تعريف">i</button>`;
-function badges(){const b={};b.suppliers=S.priceAlerts.filter(a=>!a.res).length;b.products=S.products.filter(p=>!p.comps.length).length;return b}
+function badges(){const b={};b.suppliers=S.priceAlerts.filter(a=>!a.res).length;b.orders=S.orders.filter(o=>o.status==='approval').length;b.cash=S.couriers.filter(c=>custodyBal(c.id)>0.5).length;b.products=S.products.filter(p=>!p.comps.length).length;return b}
 function shell(){const bd=badges();const groups=[...new Set(SCREENS.map(s=>s.g))];const cur=SCREENS.find(s=>s.id===VIEW)||SCREENS[0];const B=S.brands[0];
  document.getElementById('app').innerHTML=`<div class="layout">
  <aside class="side" id="side"><div class="brand"><div class="mark" style="overflow:hidden;background:#fff">${B&&B.logo?`<img src="${esc(B.logo)}" alt="" style="width:40px;height:40px;object-fit:contain">`:svg(MARK)}</div><div style="min-width:0"><b>${esc(S.settings.name||'MELT Patisserie')}</b><small>حلويات غربي · توريد مطاعم وكافيهات</small></div></div>
-  <nav class="nav">${groups.map(g=>`<div class="nav-g">${g}</div>`+SCREENS.filter(s=>s.g===g).map(s=>{const soon=s.b>1;const ok=canSee(s.id);return `<a data-a="${soon?'soon':'go'}" data-v="${s.id}" class="${VIEW===s.id?'on':''} ${ok&&!soon?'':'locked'}"${tip(soon?'هتتضاف في الدفعة '+s.b:SDESC[s.id])} tabindex="0">${svg(SIC[s.id]||'')}<span class="t">${s.t}</span>${soon?`<span class="soon">الدفعة ${s.b}</span>`:ok?'':'🔒'}${!soon&&bd[s.id]?`<span class="badge ${s.id==='products'?'w':''}">${bd[s.id]}</span>`:''}</a>`}).join('')).join('')}</nav></aside>
+  <nav class="nav">${groups.map(g=>`<div class="nav-g">${g}</div>`+SCREENS.filter(s=>s.g===g).map(s=>{const soon=s.b>APP_BATCH;const ok=canSee(s.id);return `<a data-a="${soon?'soon':'go'}" data-v="${s.id}" class="${VIEW===s.id?'on':''} ${ok&&!soon?'':'locked'}"${tip(soon?'هتتضاف في الدفعة '+s.b:SDESC[s.id])} tabindex="0">${svg(SIC[s.id]||'')}<span class="t">${s.t}</span>${soon?`<span class="soon">الدفعة ${s.b}</span>`:ok?'':'🔒'}${!soon&&bd[s.id]?`<span class="badge ${s.id==='products'?'w':''}">${bd[s.id]}</span>`:''}</a>`}).join('')).join('')}</nav></aside>
  <div class="drawer-scrim" id="dscrim" data-a="drawer"></div>
  <div class="mainwrap"><header class="top"><div class="top-in">
   <button class="icon-btn menu-btn" data-a="drawer" aria-label="القائمة">${svg('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
@@ -87,7 +87,7 @@ function go(v,tab){VIEW=v;if(tab)TAB[v]=tab;try{history.replaceState(null,'','#'
 function render(){
  if(!S.ready||LOCKED)return;recalc();shell();const el=document.getElementById('view');hideTip();
  if(!canSee(VIEW)){el.innerHTML=head((SCREENS.find(s=>s.id===VIEW)||{}).t||'')+`<div class="lock">🔒 الشاشة دي مش ضمن صلاحيات ${esc(me().name)}. المالك يقدر يفتحها من «المستخدمين والصلاحيات».</div>`;return}
- const sc=SCREENS.find(s=>s.id===VIEW);if(!V[VIEW]||(sc&&sc.b>1)){VIEW='home'}
+ const sc=SCREENS.find(s=>s.id===VIEW);if(!V[VIEW]||(sc&&sc.b>APP_BATCH)){VIEW='home'}
  el.innerHTML=V[VIEW]();applyGloss(el);
 }
 function toast(t){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}

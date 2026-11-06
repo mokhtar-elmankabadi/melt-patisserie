@@ -31,7 +31,7 @@ V.home=()=>{const sv=stockValue();const pay=S.suppliers.reduce((s,x)=>s+supLedge
  S.materials.filter(m=>m.min&&m.stock<m.min).forEach(m=>alerts.push(['warn',`${m.name} قرّب يخلص`,`الرصيد ${fmt(m.stock/m.size,1)} ${m.pu}`,'materials']));
  const steps=[[S.settings.cr||S.settings.phones,'بيانات المصنع والفاتورة','prefs'],[S.treasuries.some(t=>t.opening),'أرصدة الخزن الافتتاحية','prefs'],[S.suppliers.length,'الموردين','suppliers'],[S.materials.length,'الخامات وأسعارها','materials'],[S.recipes.length,'المكونات النص مصنعة','recipes'],[S.products.length,'المنتجات','products'],[S.users.length>1,'المستخدمين (حمزة وغيره)','users']];
  const done=steps.filter(s=>s[0]).length;
- return head('لوحة التحكم','الدفعة 1: الخامات والموردين والمشتريات والفود كوست والمنيو')+`
+ return head('لوحة التحكم','الأوردرات والتحصيل والمخزن والفود كوست في مكان واحد')+`
  ${done<steps.length&&me().owner?`<div class="card" style="margin-bottom:14px"><div class="between"><h2>ابدأ تجهيز السيستم</h2><span class="pill acc">${done} من ${steps.length}</span></div><div class="bar" style="margin:10px 0"><i style="width:${done/steps.length*100}%"></i></div><div class="list">${steps.map(s=>`<div class="li click" data-a="go" data-v="${s[2]}"><div class="main"><div class="t">${s[0]?'✓ ':'○ '}${s[1]}</div></div><span class="pill ${s[0]?'ok':''}">${s[0]?'تمام':'سجّل'}</span></div>`).join('')}</div></div>`:''}
  <div class="grid4">
   ${kpi('قيمة المخزون',can('cost')?mv(sv.all):hidden(),'خامات '+fmt(sv.m)+' · نص مصنع '+fmt(sv.r)+' · تام '+fmt(sv.p),{go:'materials',hl:1,tip:'رصيد الخامات بالمتوسط المرجّح، والنص مصنع والتام بتكلفة الوصفة'})}
