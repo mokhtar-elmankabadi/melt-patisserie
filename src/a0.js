@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='2.0.0 · الدفعة 2';const APP_BATCH=2;
+const APP_VERSION='3.0.0 · الدفعة 3';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================
@@ -27,18 +27,21 @@ const brand=id=>(S.brands||[]).find(b=>b.id===id)||S.brands[0];
 const tName=t=>{const x=tre(t);return x?x.holder+' — '+x.method:'—'};
 const me=()=>(S.users||[]).find(u=>u.id===SESSION?.user?.id)||{name:'',perms:{}};
 const can=k=>{const u=me();return !!(u.owner||(u.perms||{})[k])};
-function canSee(s){const u=me();if(u.owner||((u.perms||{}).screens||[]).includes(s))return true;return s==='orders'&&!!S.myCourier}
+function canSee(s){const u=me();if(u.owner||((u.perms||{}).screens||[]).includes(s))return true;return (s==='orders'&&!!S.myCourier)||(s==='me'&&!!S.myStaff)}
 
 async function q(table,sel,opts){let r=sb.from(table).select(sel||'*');if(opts&&opts.order)r=r.order(opts.order,{ascending:opts.asc!==false});if(opts&&opts.limit)r=r.limit(opts.limit);const {data,error}=await r;if(error){if(/permission|policy|denied/i.test(error.message))return [];console.warn(table,error.message);return []}return data||[]}
 async function loadAll(){
  const [users,settings,brands,treas,cash,sups,mats,costs,mprices,hist,alerts,purs,plines,spays,recs,rins,prods,pcomps,plog,
-  custs,cours,ords,olines,pays,cust,fees,exps,rets,prodn,counts,mlog]=await Promise.all([
+  custs,cours,ords,olines,pays,cust,fees,exps,rets,prodn,counts,mlog,
+  staff,att,advs,sadj,ppay,parts,ptx,pplan,assets,amaint,accr,clos,closedM]=await Promise.all([
   q('app_users'),q('settings'),q('brands','*',{order:'sort'}),q('treasuries','*',{order:'sort'}),q('cash_movements','*',{order:'created_at',asc:false,limit:400}),
   q('suppliers','*',{order:'name'}),q('materials','*',{order:'name'}),q('material_costs'),q('material_prices'),q('price_history','*',{order:'d'}),q('price_alerts','*',{order:'d'}),
   q('purchases','*',{order:'no'}),q('purchase_lines'),q('supplier_payments','*',{order:'d'}),q('recipes','*',{order:'name'}),q('recipe_inputs','*',{order:'ord'}),
   q('products','*',{order:'name'}),q('product_comps','*',{order:'ord'}),q('price_log','*',{order:'d'}),
   q('customers','*',{order:'name'}),q('couriers','*',{order:'name'}),q('orders','*',{order:'created_at'}),q('order_lines','*',{order:'ord'}),q('payments','*',{order:'created_at'}),q('custody','*',{order:'created_at'}),
-  q('courier_fees','*',{order:'created_at'}),q('expenses','*',{order:'created_at'}),q('returns','*',{order:'created_at'}),q('production','*',{order:'created_at',asc:false,limit:300}),q('stock_counts'),q('menu_log','*',{order:'d'})]);
+  q('courier_fees','*',{order:'created_at'}),q('expenses','*',{order:'created_at'}),q('returns','*',{order:'created_at'}),q('production','*',{order:'created_at',asc:false,limit:300}),q('stock_counts'),q('menu_log','*',{order:'d'}),
+  q('staff','*',{order:'name'}),q('attendance','*',{order:'d',asc:false,limit:5000}),q('advances','*',{order:'d'}),q('staff_adjust'),q('payroll_payments','*',{order:'d'}),q('partners','*',{order:'created_at'}),q('partner_tx','*',{order:'created_at'}),q('partner_plan','*',{order:'d'}),q('assets','*',{order:'d'}),q('asset_maint','*',{order:'d'}),q('accruals','*',{order:'created_at'}),q('closings','*',{order:'month'}),
+  sb.rpc('closed_months').then(r=>r.data||[],()=>[])]);
  const N=v=>v==null?0:+v;
  S.users=users.map(u=>({id:u.id,name:u.name,role:u.role,email:u.email,owner:u.is_owner,active:u.active,perms:u.perms||{}}));
  S.settings=Object.assign({priceAlert:3,ohMonthly:0,ohUnits:1500,leadDays:3,welcome:['','',''],thanks:['','','']},(settings[0]||{}).data||{});
@@ -63,18 +66,30 @@ async function loadAll(){
  S.priceLog=plog.map(l=>({d:l.d,pid:l.product_id,old:N(l.old_price),nw:N(l.new_price),how:l.how||'',by:l.user_name||''}));
  S.customers=custs.map(c=>({id:c.id,name:c.name,brand:c.brand,kind:c.kind,type:c.type||'',phone:c.phone||'',pay:c.pay,days:c.days||0,limit:N(c.credit_limit),disc:N(c.disc),special:c.special||{},info:c.info||{},active:c.active!==false}));
  S.couriers=cours.map(c=>({id:c.id,name:c.name,kind:c.kind,phone:c.phone||'',salary:N(c.salary),comm:N(c.comm),commOn:c.comm_on,perOrder:N(c.per_order),userId:c.user_id,active:c.active!==false}));
- S.orders=ords.map(o=>({id:o.id,brand:o.brand,no:o.no,inv:o.inv_no,cu:o.cu,date:o.d,due:o.due||'',status:o.status,courier:o.courier_id,fee:N(o.fee),feeOn:o.fee_on,discType:o.disc_type,discVal:N(o.disc_val),extras:o.extras||[],notes:o.notes||'',approvalReason:o.approval_reason||'',approvedBy:o.approved_by||'',
+ S.orders=ords.map(o=>({id:o.id,outAt:o.out_at,brand:o.brand,no:o.no,inv:o.inv_no,cu:o.cu,date:o.d,due:o.due||'',status:o.status,courier:o.courier_id,fee:N(o.fee),feeOn:o.fee_on,discType:o.disc_type,discVal:N(o.disc_val),extras:o.extras||[],notes:o.notes||'',approvalReason:o.approval_reason||'',approvedBy:o.approved_by||'',
   sub:N(o.sub),custDisc:N(o.cust_disc),discAmt:N(o.disc_amt),odisc:N(o.odisc),extrasTotal:N(o.extras_total),feeCharged:N(o.fee_charged),total:N(o.total),cost:N(o.cost),stockOut:o.stock_out,
   lines:olines.filter(l=>l.order_id===o.id).map(l=>({pid:l.product_id,q:N(l.qty),price:N(l.price),cost:N(l.cost)}))}));
  S.payments=pays.map(p=>({id:p.id,d:p.d,cu:p.cu,order:p.order_id,amt:N(p.amount),t:p.treasury_id,courier:p.courier_id,by:(S.users.find(u=>u.id===p.user_id)||{}).name||''}));
  S.custody=cust.map(c=>({d:c.d,courier:c.courier_id,amt:N(c.amount),note:c.note||''}));
  S.fees=fees.map(f=>({courier:f.courier_id,order:f.order_id,amt:N(f.amount),settled:f.settled,d:f.d}));
- S.expenses=exps.map(e=>({id:e.id,d:e.d,cat:e.cat,amt:N(e.amount),t:e.treasury_id,courier:e.courier_id,note:e.note||''}));
+ S.expenses=exps.map(e=>({id:e.id,d:e.d,cat:e.cat,amt:N(e.amount),t:e.treasury_id,courier:e.courier_id,note:e.note||'',acc:e.accrual_id,asset:e.asset_id,by:(S.users.find(u=>u.id===e.user_id)||{}).name||''}));
  S.returns=rets.map(r=>({id:r.id,d:r.d,cu:r.cu,order:r.order_id,pid:r.product_id,q:N(r.qty),kind:r.kind,reason:r.reason,value:N(r.value),cost:N(r.cost)}));
  S.production=prodn.map(x=>({id:x.id,d:x.d,k:x.kind,item:x.item_id,qty:N(x.qty),by:x.user_name||''}));
  S.counts=Object.fromEntries(counts.map(c=>[c.month,{status:c.status,items:c.items||{},value:N(c.value),loss:N(c.var_loss),gain:N(c.var_gain),by:c.approved_by,at:c.approved_at}]));
  S.menuLog=mlog.map(m=>({d:m.d,brand:m.brand,cu:m.cu,layout:m.layout}));
  S.myCourier=S.couriers.find(c=>c.userId&&c.userId===SESSION?.user?.id)||null;
+ S.staff=staff.map(w=>({id:w.id,name:w.name,job:w.job||'',phone:w.phone||'',type:w.type,salary:N(w.salary),payMode:w.pay_mode,start:w.shift_start||'16:00',end:w.shift_end||'00:00',userId:w.user_id,courier:w.courier_id,since:w.start_date,active:w.active!==false}));
+ S.att=att.map(a=>({id:a.id,w:a.staff_id,d:a.d,in:a.check_in,out:a.check_out,inDist:a.in_dist,outDist:a.out_dist,status:a.status,src:a.source,late:N(a.late_min),ot:N(a.ot_min),note:a.note||'',by:a.approved_by||''}));
+ S.advances=advs.map(a=>({id:a.id,w:a.staff_id,d:a.d,amt:N(a.amount),t:a.treasury_id,mode:a.mode,inst:N(a.inst_amount),repaid:N(a.repaid),note:a.note||''}));
+ S.adjust=sadj.map(a=>({id:a.id,w:a.staff_id,m:a.month,kind:a.kind,amt:N(a.amount),note:a.note||''}));
+ S.payroll=ppay.map(x=>({id:x.id,w:x.staff_id,d:x.d,m:x.month,from:x.period_from,to:x.period_to,gross:N(x.gross),adv:N(x.adv_ded),net:N(x.net),t:x.treasury_id,details:x.details||{},note:x.note||''}));
+ S.partners=parts.map(p=>({id:p.id,name:p.name,phone:p.phone||'',kind:p.kind,share:N(p.share),method:p.method,rate:N(p.rate),capital:N(p.capital),start:p.start_d,end:p.end_d,exited:p.exited,acct:ptx.filter(t=>t.partner_id===p.id).map(t=>({id:t.id,d:t.d,type:t.type,amt:N(t.amount),note:t.note||'',t:t.treasury_id,m:t.month})),plan:pplan.filter(x=>x.partner_id===p.id).map(x=>({d:x.d,amt:N(x.amount),paid:x.paid}))}));
+ S.assets=assets.map(a=>({id:a.id,name:a.name,cost:N(a.cost),date:a.d,life:a.life_months||60,salvage:N(a.salvage),partner:a.partner_id,disposed:a.disposed_at,note:a.note||'',maint:amaint.filter(m=>m.asset_id===a.id).map(m=>({d:m.d,cost:N(m.cost),note:m.note||''}))}));
+ S.accruals=accr.map(a=>({id:a.id,m:a.month,cat:a.cat,amt:N(a.amount),paid:N(a.paid),note:a.note||''}));
+ S.closings=Object.fromEntries(clos.map(c=>[c.month,{status:c.status,pl:c.pl||{},reserve:N(c.reserve),dist:c.dist||[],by:c.closed_by,at:c.closed_at}]));
+ S.closedM=closedM||[];
+ S.months=clos.filter(c=>c.status==='closed'&&/^\d{4}-\d{2}$/.test(c.month)&&c.pl&&c.pl.sales!=null).map(c=>Object.assign({k:c.month},c.pl));
+ S.myStaff=S.staff.find(w=>w.userId&&w.userId===SESSION?.user?.id)||null;
  S.ready=true;recalc();
 }
 // DB helpers
@@ -82,7 +97,7 @@ async function dbx(promise,okMsg){const {data,error}=await promise;if(error){toa
 async function rpc(fn,args,okMsg){return dbx(sb.rpc(fn,args),okMsg)}
 let _reloadT=null;async function refresh(){await loadAll();render()}
 function scheduleRefresh(){clearTimeout(_reloadT);_reloadT=setTimeout(()=>{const ae=document.activeElement;if(ae&&ae.closest&&ae.closest('#view')&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)){scheduleRefresh();return}if(S.ready&&!LOCKED)refresh()},600)}
-function subscribeRealtime(){const ch=sb.channel('melt-all');['settings','brands','treasuries','cash_movements','suppliers','materials','material_costs','material_prices','price_alerts','purchases','supplier_payments','recipes','recipe_inputs','products','product_comps','price_log','app_users','customers','couriers','orders','order_lines','payments','custody','courier_fees','expenses','returns','production','stock_counts'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},scheduleRefresh));ch.subscribe()}
+function subscribeRealtime(){const ch=sb.channel('melt-all');['settings','brands','treasuries','cash_movements','suppliers','materials','material_costs','material_prices','price_alerts','purchases','supplier_payments','recipes','recipe_inputs','products','product_comps','price_log','app_users','customers','couriers','orders','order_lines','payments','custody','courier_fees','expenses','returns','production','stock_counts','staff','attendance','advances','staff_adjust','payroll_payments','partners','partner_tx','partner_plan','assets','asset_maint','accruals','closings'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},scheduleRefresh));ch.subscribe()}
 async function uploadImage(blob,path){const {error}=await sb.storage.from('menu').upload(path,blob,{upsert:true,contentType:blob.type||'image/jpeg'});if(error){toast('رفع الصورة فشل: '+error.message);throw error}return sb.storage.from('menu').getPublicUrl(path).data.publicUrl}
 function dataToBlob(d){const [h,b]=d.split(',');const mime=h.match(/:(.*?);/)[1];const bin=atob(b);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:mime})}
 function imgToData(file,max,cb,png){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*s);cv.height=Math.round(im.height*s);const x=cv.getContext('2d');if(!png){x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height)}x.drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL(png?'image/png':'image/jpeg',.86))};im.src=r.result};r.readAsDataURL(file)}
@@ -119,7 +134,7 @@ async function afterLogin(fresh){const {data}=await sb.auth.getSession();SESSION
  if(fresh&&!lsGet(PIN_KEY())){showPinSetup();return}
  if(!fresh&&lsGet(PIN_KEY())){showLock();return}
  startApp()}
-function startApp(){LOCKED=false;const h=(location.hash||'').slice(1);if(SCREENS.some(s=>s.id===h&&s.b<=APP_BATCH))VIEW=h;if(!canSee(VIEW)&&S.myCourier)VIEW='orders';render();armIdle()}
+function startApp(){LOCKED=false;const h=(location.hash||'').slice(1);if(SCREENS.some(s=>s.id===h&&s.b<=APP_BATCH))VIEW=h;if(!canSee(VIEW)&&S.myCourier)VIEW='orders';else if(!canSee(VIEW)&&S.myStaff)VIEW='me';render();armIdle()}
 function pinPad(title,sub,act,extra){PIN_BUF='';authShell(`<h2 style="margin:6px 0 2px">${title}</h2><p class="small muted">${sub}</p><div class="pin-dots" id="pdots">${'<i></i>'.repeat(6)}</div>
  <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-a="pinKey" data-v="${n}">${n}</button>`).join('')}<button data-a="pinKey" data-v="del" aria-label="مسح">⌫</button><button data-a="pinKey" data-v="0">0</button><button data-a="pinKey" data-v="ok" data-next="${act}" aria-label="تأكيد">✓</button></div>${extra||''}`)}
 function showPinSetup(){pinPad('اختار رمز سري','من 4 لـ 6 أرقام، بيفتح بيه السيستم على الجهاز ده من غير الإيميل','pinSet1',`<button class="btn ghost sm" style="margin-top:10px" data-a="pinSkip">تخطي دلوقتي</button>`)}

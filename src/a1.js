@@ -4,7 +4,7 @@ const SCREENS=[
  {id:'home',t:'الرئيسية',g:'التشغيل',b:1},{id:'orders',t:'الأوردرات والفواتير',g:'التشغيل',b:2},{id:'cash',t:'التحصيل والخزن',g:'التشغيل',b:2},{id:'couriers',t:'المناديب والتوصيل',g:'التشغيل',b:2},{id:'returns',t:'المرتجعات والهالك',g:'التشغيل',b:2},
  {id:'materials',t:'الخامات',g:'الإنتاج والفود كوست',b:1},{id:'recipes',t:'الوصفات (نص مصنع)',g:'الإنتاج والفود كوست',b:1},{id:'products',t:'المنتجات',g:'الإنتاج والفود كوست',b:1},{id:'costing',t:'الفود كوست والتسعير',g:'الإنتاج والفود كوست',b:1},{id:'production',t:'تسجيل الإنتاج',g:'الإنتاج والفود كوست',b:2},
  {id:'stock',t:'المخزن والجرد',g:'المخزن والموردين والعملاء',b:2},{id:'suppliers',t:'الموردين والمشتريات',g:'المخزن والموردين والعملاء',b:1},{id:'customers',t:'العملاء',g:'المخزن والموردين والعملاء',b:2},{id:'contacts',t:'دليل العملاء والموردين',g:'المخزن والموردين والعملاء',b:2},{id:'greetings',t:'التهاني والمناسبات',g:'المخزن والموردين والعملاء',b:3},{id:'menu',t:'المنيو وقائمة الأسعار',g:'المخزن والموردين والعملاء',b:1},
- {id:'expenses',t:'المصروفات',g:'المال والناس',b:3},{id:'staff',t:'الموظفين والمرتبات',g:'المال والناس',b:3},{id:'capital',t:'رأس المال والتقييم',g:'المال والناس',b:3},{id:'partners',t:'الشركاء',g:'المال والناس',b:3},{id:'closing',t:'الإقفال والتقارير',g:'المال والناس',b:3},{id:'forecast',t:'التنبؤ بالمبيعات والمصروفات',g:'المال والناس',b:3},
+ {id:'me',t:'حضوري ومرتبي',g:'المال والناس',b:3},{id:'expenses',t:'المصروفات',g:'المال والناس',b:3},{id:'staff',t:'الموظفين والمرتبات',g:'المال والناس',b:3},{id:'capital',t:'رأس المال والتقييم',g:'المال والناس',b:3},{id:'partners',t:'الشركاء',g:'المال والناس',b:3},{id:'closing',t:'الإقفال والتقارير',g:'المال والناس',b:3},{id:'forecast',t:'التنبؤ بالمبيعات والمصروفات',g:'المال والناس',b:3},
  {id:'users',t:'المستخدمين والصلاحيات',g:'النظام',b:1},{id:'prefs',t:'الإعدادات',g:'النظام',b:1}];
 const SDESC={
  home:'ملخص سريع: مبيعات وربح الشهر، فلوس الخزن، المديونيات، وكل حاجة محتاجة انتباهك',
@@ -21,7 +21,8 @@ const SDESC={
  suppliers:'فواتير الشراء كاش أو آجل أو جزئي، السداد، كشف الحساب، وتنبيهات زيادة الأسعار',
  customers:'داشبورد وتحليل المطاعم والكافيهات: أكبر العملاء، المنتجات، المقارنات، مدة السحب، والتنبيهات. وكمان الأسعار الخاصة والخصم، مدة الآجل وحد المديونية، وكشف الحساب',
  expenses:'المصروفات بالبنود: إيجار، كهربا، غاز، منظفات، وأي بند جديد',
- staff:'الموظفين بالشهري واليومية، السلف، وتقفيل المرتبات',
+ staff:'الموظفين بالشهري واليومية، الحضور بالموقع، الغياب والتأخير والأوفر تايم، السلف والقبض',
+ me:'تسجيل حضورك وانصرافك من جوه المصنع، وحسابك وسلفك',
  capital:'الأصول الثابتة والإهلاك، توزيع رأس المال، والتقييم',
  partners:'نسب الشركاء، الحساب الجاري، الأرباح المحتجزة، الأقساط، والشريك المؤقت',
  closing:'قائمة الدخل الشهرية والسنوية، الربح الحقيقي مقابل سحب المخزون، وتوزيع الأرباح',
@@ -47,6 +48,7 @@ const SIC={
  customers:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14a5 5 0 0 1 5.5 6"/>',
  expenses:'<path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z"/><path d="M10 8h4M10 12h4"/>',
  staff:'<circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+ me:'<circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8z"/>',
  capital:'<path d="M3 21h18M5 21V10M10 21V10M14 21V10M19 21V10M12 3l9 5H3z"/>',
  partners:'<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20a6 6 0 0 1 12 0M10 20a6 6 0 0 1 12 0"/>',
  closing:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
@@ -64,7 +66,7 @@ function badges(){const b={};b.suppliers=S.priceAlerts.filter(a=>!a.res).length;
 function shell(){const bd=badges();const groups=[...new Set(SCREENS.map(s=>s.g))];const cur=SCREENS.find(s=>s.id===VIEW)||SCREENS[0];const B=S.brands[0];
  document.getElementById('app').innerHTML=`<div class="layout">
  <aside class="side" id="side"><div class="brand"><div class="mark" style="overflow:hidden;background:#fff">${B&&B.logo?`<img src="${esc(B.logo)}" alt="" style="width:40px;height:40px;object-fit:contain">`:svg(MARK)}</div><div style="min-width:0"><b>${esc(S.settings.name||'MELT Patisserie')}</b><small>حلويات غربي · توريد مطاعم وكافيهات</small></div></div>
-  <nav class="nav">${groups.map(g=>`<div class="nav-g">${g}</div>`+SCREENS.filter(s=>s.g===g).map(s=>{const soon=s.b>APP_BATCH;const ok=canSee(s.id);return `<a data-a="${soon?'soon':'go'}" data-v="${s.id}" class="${VIEW===s.id?'on':''} ${ok&&!soon?'':'locked'}"${tip(soon?'هتتضاف في الدفعة '+s.b:SDESC[s.id])} tabindex="0">${svg(SIC[s.id]||'')}<span class="t">${s.t}</span>${soon?`<span class="soon">الدفعة ${s.b}</span>`:ok?'':'🔒'}${!soon&&bd[s.id]?`<span class="badge ${s.id==='products'?'w':''}">${bd[s.id]}</span>`:''}</a>`}).join('')).join('')}</nav></aside>
+  <nav class="nav">${groups.map(g=>`<div class="nav-g">${g}</div>`+SCREENS.filter(s=>s.g===g&&(s.id!=='me'||S.myStaff)).map(s=>{const soon=s.b>APP_BATCH;const ok=canSee(s.id);return `<a data-a="${soon?'soon':'go'}" data-v="${s.id}" class="${VIEW===s.id?'on':''} ${ok&&!soon?'':'locked'}"${tip(soon?'هتتضاف في الدفعة '+s.b:SDESC[s.id])} tabindex="0">${svg(SIC[s.id]||'')}<span class="t">${s.t}</span>${soon?`<span class="soon">الدفعة ${s.b}</span>`:ok?'':'🔒'}${!soon&&bd[s.id]?`<span class="badge ${s.id==='products'?'w':''}">${bd[s.id]}</span>`:''}</a>`}).join('')).join('')}</nav></aside>
  <div class="drawer-scrim" id="dscrim" data-a="drawer"></div>
  <div class="mainwrap"><header class="top"><div class="top-in">
   <button class="icon-btn menu-btn" data-a="drawer" aria-label="القائمة">${svg('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>

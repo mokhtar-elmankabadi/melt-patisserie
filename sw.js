@@ -1,4 +1,4 @@
-const C='melt-v2';const SHELL=['./','index.html','style.css?v=2','app.js?v=2','logo-melt.png','logo-moyou.png','icon-192.png','manifest.webmanifest'];
+const C='melt-v3';const SHELL=['./','index.html','style.css?v=3','app.js?v=3','logo-melt.png','logo-moyou.png','icon-192.png','manifest.webmanifest'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==location.origin)return;
