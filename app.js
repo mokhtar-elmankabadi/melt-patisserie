@@ -1574,3 +1574,25 @@ A.oiSave=async()=>{if(_busy)return;oiRead();if(!OI.d||OI.d>today()){toast('اخ�
  try{const oid=await rpc('create_old_invoice',{p:{cu:OI.cu,d:OI.d===today()?'':OI.d,fee:OI.feeOn==='cust'?OI.fee:0,fee_on:OI.feeOn,disc_type:'amt',disc_val:OI.discVal,extras:[],notes:OI.notes,courier_id:OI.courier,paid:OI.paid,treasury_id:k==='t'?id:'',pay_courier_id:k==='co'?id:'',
   lines:OI.lines.map(l=>({product_id:l.pid,qty:l.q,cost:+pcost(prod(l.pid)).mat.toFixed(4)}))}});closeSheet();await refresh();const o=ordr(oid);toast('اتسجلت '+(o?o.inv:'الفاتورة')+' بتاريخ '+dShort(OI.d));
   if(confirm('تسجل فاتورة قديمة تانية؟')){const keep={d:OI.d,dest:OI.dest};A.oldInv();Object.assign(OI,keep);oiSheet()}}finally{_busy=false}};
+
+// ---- staff: create attendance login in one step ----
+function translit(s){const M={'ا':'a','أ':'a','إ':'e','آ':'a','ب':'b','ت':'t','ث':'th','ج':'g','ح':'h','خ':'kh','د':'d','ذ':'z','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'k','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'a','و':'o','ي':'y','ى':'a','ئ':'e','ؤ':'o','ء':''};
+ return String(s||'').trim().split(/\s+/).slice(0,2).map(w=>[...w].map(ch=>M[ch]!=null?M[ch]:/[a-z0-9]/i.test(ch)?ch.toLowerCase():'').join('')).filter(Boolean).join('.')||'emp'}
+function suggestEmail(name){const base=translit(name);const used=new Set(S.users.map(u=>(u.email||'').toLowerCase()));let e=base+'@melt.app',i=2;while(used.has(e)){e=base+i+'@melt.app';i++}return e}
+function genPass(){const c='abcdefghjkmnpqrstuvwxyz23456789';let p='';for(let i=0;i<8;i++)p+=c[Math.floor(Math.random()*c.length)];return p}
+A.staffLogin=el=>{const w=staffOf(el.dataset.v);sheet(`<h2>حساب بصمة لـ ${esc(w.name)}</h2><p class="sub">هيدخل بيه من موبايله ويشوف «حضوري ومرتبي» بس.</p><div class="fgrid">
+ <div class="field full"><label for="sl-e">الإيميل ${ti('مش لازم يكون إيميل حقيقي. ده اسم الدخول بتاعه')}</label><input id="sl-e" type="text" style="direction:ltr" value="${esc(suggestEmail(w.name))}"></div>
+ <div class="field full"><label for="sl-p">كلمة السر (8 حروف على الأقل)</label><input id="sl-p" type="text" style="direction:ltr" value="${genPass()}"></div></div>
+ <button class="btn block" style="margin-top:12px" data-a="staffLoginSave" data-v="${w.id}">اعمل الحساب واربطه</button>`)};
+A.staffLoginSave=async el=>{if(_busy)return;const w=staffOf(el.dataset.v);const email=val('sl-e').trim().toLowerCase(),password=val('sl-p').trim();
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('الإيميل مش مظبوط');return}if(password.length<8){toast('كلمة السر 8 حروف على الأقل');return}
+ _busy=true;try{const {data,error}=await sb.functions.invoke('admin-users',{body:{action:'create',name:w.name,role:w.job||'موظف',email,password,perms:{screens:[]}}});
+  if(error||data?.error){toast('مقدرتش أعمل الحساب: '+(data?.error||error.message));return}
+  await dbx(sb.from('staff').update({user_id:data.id}).eq('id',w.id));await refresh();
+  const link=location.origin+location.pathname;const msg=`السلام عليكم ${w.name}\nده حسابك لتسجيل الحضور في MELT:\nاللينك: ${link}\nالإيميل: ${email}\nكلمة السر: ${password}\nافتح اللينك من موبايلك وادخل، وبعدين اعمل رمز سري. سجّل «حضرت» و«مشيت» وإنت جوه المصنع.`;
+  sheet(`<h2>اتعمل الحساب ✓</h2><p class="sub">ابعت البيانات دي لـ ${esc(w.name)}</p><div class="card flat" style="direction:rtl;white-space:pre-wrap;font-size:14px;line-height:1.9" id="sl-msg">${esc(msg)}</div>
+  <div class="row" style="margin-top:12px"><button class="btn" data-a="copy" data-t="${esc(msg)}">نسخ الرسالة</button>${w.phone?`<a class="btn sec" href="https://wa.me/${esc(String(w.phone).replace(/\D/g,'').replace(/^0/,'20'))}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">إرسال واتساب</a>`:''}<button class="btn ghost" data-a="close">تم</button></div>`)}finally{_busy=false}};
+const _staffDetailBase=A.staffDetail;
+A.staffDetail=el=>{_staffDetailBase(el);const w=staffOf(el.dataset.v);if(!me().owner)return;const box=document.querySelector('.sheet .between');if(!box)return;
+ const u=w.userId?S.users.find(x=>x.id===w.userId):null;
+ box.insertAdjacentHTML('afterend',w.userId?`<p class="small" style="margin:4px 0 0">📱 بيسجل من موبايله: <span style="direction:ltr;unicode-bidi:embed">${esc(u?.email||'')}</span> <button class="btn ghost sm" data-a="userPwd" data-v="${w.userId}">كلمة سر جديدة</button></p>`:`<div style="margin-top:6px"><button class="btn sm" data-a="staffLogin" data-v="${w.id}">📱 اعمل له حساب بصمة</button></div>`)};
