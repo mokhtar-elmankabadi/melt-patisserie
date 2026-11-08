@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='3.0.0 · الدفعة 3';const APP_BATCH=3;
+const APP_VERSION='3.1.0 · العبوات والتواريخ';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================
@@ -15,7 +15,7 @@ const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','ي
 const dShort=d=>{if(!d)return '';const x=new Date(String(d).slice(0,10)+'T12:00');return x.getDate()+' '+MONTHS[x.getMonth()]};
 const daysBetween=(a,b)=>Math.round((new Date(String(b).slice(0,10)+'T12:00')-new Date(String(a).slice(0,10)+'T12:00'))/864e5);
 function daysAddISO(d,n){const x=new Date(String(d).slice(0,10)+'T12:00');x.setDate(x.getDate()+(+n||0));return x.toISOString().slice(0,10)}
-const unitLbl=u=>({g:'جم',pc:'قطعة',m:'متر'}[u]||u);
+const unitLbl=u=>({g:'جم',ml:'مل',pc:'قطعة',m:'متر'}[u]||u);
 const uuid=()=>crypto.randomUUID();
 const byId=(a,id)=>a.find(x=>x.id===id);
 const avgArr=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
@@ -51,7 +51,7 @@ async function loadAll(){
  S.cashLog=cash.map(c=>({d:c.d,t:c.treasury_id,amt:N(c.amount),note:c.note,by:(S.users.find(u=>u.id===c.user_id)||{}).name||''}));
  S.suppliers=sups.map(s=>({id:s.id,name:s.name,phone:s.phone||'',terms:s.terms||'كاش',days:s.days||0,opening:N(s.opening_balance),info:s.info||{}}));
  const cm=Object.fromEntries(costs.map(c=>[c.material_id,c]));
- S.materials=mats.filter(m=>m.active!==false).map(m=>{const c=cm[m.id]||{};return {id:m.id,name:m.name,cat:m.cat,base:m.base,pu:m.pu,size:N(m.size)||1,stock:N(m.stock),min:N(m.min_stock),avg:N(c.avg_cost),
+ S.materials=mats.filter(m=>m.active!==false).map(m=>{const c=cm[m.id]||{};return {id:m.id,name:m.name,cat:m.cat,base:m.base,pu:m.pu,size:N(m.size)||1,units:Array.isArray(m.units)?m.units.filter(u=>u&&u.n&&+u.s>0).map(u=>({n:u.n,s:+u.s})):[],stock:N(m.stock),min:N(m.min_stock),avg:N(c.avg_cost),
   last:c.last_price!=null?{s:c.last_supplier,b:c.last_quality||'',p:N(c.last_price),d:c.last_date}:null,
   prices:mprices.filter(p=>p.material_id===m.id).map(p=>({id:p.id,s:p.supplier_id,b:p.quality||'',p:N(p.price)})),
   hist:hist.filter(h=>h.material_id===m.id).map(h=>({d:h.d,s:h.supplier_id,b:h.quality||'',p:N(h.price)}))}});
