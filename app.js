@@ -1618,3 +1618,11 @@ async function offlineSession(){if(navigator.onLine)return null;let uid=null;try
 window.addEventListener('offline',()=>{if(S.ready)setOffline(true,S.loadedAt)});
 window.addEventListener('online',()=>{setTimeout(async()=>{try{const {data}=await sb.auth.getSession();if(data.session)SESSION=data.session;if(S.ready&&!LOCKED){await refresh();if(!S.offline)toast('النت رجع واتحدّثت البيانات')}}catch(e){}},1500)});
 const _logoutBase=A_AUTH.logout;A_AUTH.logout=A.logout=async()=>{try{await IDB.del(cacheKey());localStorage.removeItem('melt-last-uid')}catch(e){}await _logoutBase()};
+
+// ---- backup status (owner) ----
+const _loadAllBk=loadAll;loadAll=async function(){await _loadAllBk();if(S.offline)return;if(me()&&me().owner){const r=await q('backup_log','*',{order:'at',asc:false,limit:1});S.lastBackup=r[0]||null}};
+const _homeBk=V.home;V.home=()=>{let html=_homeBk();if(!me().owner||!S.ready)return html;const lb=S.lastBackup;const hrs=lb?(Date.now()-new Date(lb.at))/36e5:null;
+ if(hrs!=null&&hrs<36)return html;const msg=lb?'آخر نسخة احتياطية من '+Math.floor(hrs/24)+' يوم':'لسه مفيش نسخة احتياطية اتعملت على Google Drive';
+ return `<div class="alert ${lb?'bad':'warn'}" style="margin-bottom:12px"><span class="dot"></span><div><b>النسخة الاحتياطية</b><div class="small">${msg}. اتأكد إن سكريبت جوجل شغال.</div></div></div>`+html};
+const _prefsBk=V.prefs;V.prefs=()=>{const h=_prefsBk();if(!me().owner)return h;const lb=S.lastBackup;
+ return h+`<div class="card" style="margin-top:12px"><h2>النسخة الاحتياطية</h2><p class="sub">${lb?'آخر نسخة: '+new Date(lb.at).toLocaleString('ar-EG')+' · '+fmt(lb.bytes/1024,0)+' KB':'لسه مفيش نسخة اتعملت'}</p><p class="small muted">بتتعمل كل يوم الساعة 3 الفجر على Google Drive وبتوصلك على Gmail.</p></div>`};
