@@ -128,4 +128,4 @@ const _homeBk=V.home;V.home=()=>{let html=_homeBk();if(!me().owner||!S.ready)ret
  if(hrs!=null&&hrs<36)return html;const msg=lb?'آخر نسخة احتياطية من '+Math.floor(hrs/24)+' يوم':'لسه مفيش نسخة احتياطية اتعملت على Google Drive';
  return `<div class="alert ${lb?'bad':'warn'}" style="margin-bottom:12px"><span class="dot"></span><div><b>النسخة الاحتياطية</b><div class="small">${msg}. اتأكد إن سكريبت جوجل شغال.</div></div></div>`+html};
 const _prefsBk=V.prefs;V.prefs=()=>{const h=_prefsBk();if(!me().owner)return h;const lb=S.lastBackup;
- return h+`<div class="card" style="margin-top:12px"><h2>النسخة الاحتياطية</h2><p class="sub">${lb?'آخر نسخة: '+new Date(lb.at).toLocaleString('ar-EG')+' · '+fmt(lb.bytes/1024,0)+' KB':'لسه مفيش نسخة اتعملت'}</p><p class="small muted">بتتعمل كل يوم الساعة 3 الفجر على Google Drive وبتوصلك على Gmail.</p></div>`};
+ return h+`<div class="card" style="margin-top:12px"><h2>النسخة الاحتياطية</h2><p class="sub">${lb?'آخر نسخة: '+new Date(lb.at).toLocaleString('ar-EG')+' · '+fmt(lb.bytes/1024,0)+' KB':'لسه مفيش نسخة اتعملت'}</p><p class="small muted">بتتعمل كل يوم الساعة 6 الصبح على Google Drive وبتوصلك على Gmail.</p></div>`};
