@@ -29,7 +29,7 @@ const me=()=>(S.users||[]).find(u=>u.id===SESSION?.user?.id)||{name:'',perms:{}}
 const can=k=>{const u=me();return !!(u.owner||(u.perms||{})[k])};
 function canSee(s){const u=me();if(u.owner||((u.perms||{}).screens||[]).includes(s))return true;return (s==='orders'&&!!S.myCourier)||(s==='me'&&!!S.myStaff)}
 
-async function q(table,sel,opts){let r=sb.from(table).select(sel||'*');if(opts&&opts.order)r=r.order(opts.order,{ascending:opts.asc!==false});if(opts&&opts.limit)r=r.limit(opts.limit);const {data,error}=await r;if(error){if(/permission|policy|denied/i.test(error.message))return [];console.warn(table,error.message);return []}return data||[]}
+let _netErr=false;async function q(table,sel,opts){let r=sb.from(table).select(sel||'*');if(opts&&opts.order)r=r.order(opts.order,{ascending:opts.asc!==false});if(opts&&opts.limit)r=r.limit(opts.limit);const {data,error}=await r;if(error){if(/fetch|network|timeout|load failed/i.test(error.message))_netErr=true;if(/permission|policy|denied/i.test(error.message))return [];console.warn(table,error.message);return []}return data||[]}
 async function loadAll(){
  const [users,settings,brands,treas,cash,sups,mats,costs,mprices,hist,alerts,purs,plines,spays,recs,rins,prods,pcomps,plog,
   custs,cours,ords,olines,pays,cust,fees,exps,rets,prodn,counts,mlog,
@@ -93,7 +93,7 @@ async function loadAll(){
  S.ready=true;recalc();
 }
 // DB helpers
-async function dbx(promise,okMsg){const {data,error}=await promise;if(error){toast('حصلت مشكلة: '+error.message);throw error}if(okMsg)toast(okMsg);return data}
+async function dbx(promise,okMsg){if(S.offline||!navigator.onLine){toast('مفيش نت دلوقتي، التسجيل هيشتغل أول ما النت يرجع');throw new Error('offline')}const {data,error}=await promise;if(error){toast('حصلت مشكلة: '+error.message);throw error}if(okMsg)toast(okMsg);return data}
 async function rpc(fn,args,okMsg){return dbx(sb.rpc(fn,args),okMsg)}
 let _reloadT=null;async function refresh(){await loadAll();render()}
 function scheduleRefresh(){clearTimeout(_reloadT);_reloadT=setTimeout(()=>{const ae=document.activeElement;if(ae&&ae.closest&&ae.closest('#view')&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)){scheduleRefresh();return}if(S.ready&&!LOCKED)refresh()},600)}
@@ -125,7 +125,7 @@ A_AUTH.signupOwner=async()=>{const n=val('au-n').trim(),e=val('au-e').trim(),p=v
  if(data.session){afterLogin(true)}else showLogin('اتعمل الحساب. افتح الإيميل اللي وصلك على '+e+' واضغط على لينك التأكيد، وبعدين ارجع هنا وادخل.')};
 A_AUTH.forgot=async()=>{const e=val('au-e').trim();if(!e){toast('اكتب إيميلك الأول');return}const {error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin+location.pathname});toast(error?error.message:'اتبعتلك رسالة لتغيير كلمة السر')};
 A_AUTH.logout=async()=>{await sb.auth.signOut();lsDel(PIN_KEY());location.hash='';location.reload()};
-async function afterLogin(fresh){const {data}=await sb.auth.getSession();SESSION=data.session;if(!SESSION){showLogin();return}
+async function afterLogin(fresh){const {data}=await sb.auth.getSession();SESSION=data.session;if(!SESSION){const off=await offlineSession();if(!off){showLogin();return}SESSION=off}
  document.getElementById('app').innerHTML='<div class="loading">بيحمّل البيانات...</div>';
  await loadAll();const u=me();
  if(!u.id){authShell(`<h2>حسابك لسه مش مفعّل</h2><p class="muted">اطلب من المالك يضيفك من «المستخدمين والصلاحيات».</p><button class="btn sec" data-a="logout">خروج</button>`);return}

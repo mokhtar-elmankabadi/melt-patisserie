@@ -29,7 +29,7 @@ const me=()=>(S.users||[]).find(u=>u.id===SESSION?.user?.id)||{name:'',perms:{}}
 const can=k=>{const u=me();return !!(u.owner||(u.perms||{})[k])};
 function canSee(s){const u=me();if(u.owner||((u.perms||{}).screens||[]).includes(s))return true;return (s==='orders'&&!!S.myCourier)||(s==='me'&&!!S.myStaff)}
 
-async function q(table,sel,opts){let r=sb.from(table).select(sel||'*');if(opts&&opts.order)r=r.order(opts.order,{ascending:opts.asc!==false});if(opts&&opts.limit)r=r.limit(opts.limit);const {data,error}=await r;if(error){if(/permission|policy|denied/i.test(error.message))return [];console.warn(table,error.message);return []}return data||[]}
+let _netErr=false;async function q(table,sel,opts){let r=sb.from(table).select(sel||'*');if(opts&&opts.order)r=r.order(opts.order,{ascending:opts.asc!==false});if(opts&&opts.limit)r=r.limit(opts.limit);const {data,error}=await r;if(error){if(/fetch|network|timeout|load failed/i.test(error.message))_netErr=true;if(/permission|policy|denied/i.test(error.message))return [];console.warn(table,error.message);return []}return data||[]}
 async function loadAll(){
  const [users,settings,brands,treas,cash,sups,mats,costs,mprices,hist,alerts,purs,plines,spays,recs,rins,prods,pcomps,plog,
   custs,cours,ords,olines,pays,cust,fees,exps,rets,prodn,counts,mlog,
@@ -93,7 +93,7 @@ async function loadAll(){
  S.ready=true;recalc();
 }
 // DB helpers
-async function dbx(promise,okMsg){const {data,error}=await promise;if(error){toast('حصلت مشكلة: '+error.message);throw error}if(okMsg)toast(okMsg);return data}
+async function dbx(promise,okMsg){if(S.offline||!navigator.onLine){toast('مفيش نت دلوقتي، التسجيل هيشتغل أول ما النت يرجع');throw new Error('offline')}const {data,error}=await promise;if(error){toast('حصلت مشكلة: '+error.message);throw error}if(okMsg)toast(okMsg);return data}
 async function rpc(fn,args,okMsg){return dbx(sb.rpc(fn,args),okMsg)}
 let _reloadT=null;async function refresh(){await loadAll();render()}
 function scheduleRefresh(){clearTimeout(_reloadT);_reloadT=setTimeout(()=>{const ae=document.activeElement;if(ae&&ae.closest&&ae.closest('#view')&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)){scheduleRefresh();return}if(S.ready&&!LOCKED)refresh()},600)}
@@ -125,7 +125,7 @@ A_AUTH.signupOwner=async()=>{const n=val('au-n').trim(),e=val('au-e').trim(),p=v
  if(data.session){afterLogin(true)}else showLogin('اتعمل الحساب. افتح الإيميل اللي وصلك على '+e+' واضغط على لينك التأكيد، وبعدين ارجع هنا وادخل.')};
 A_AUTH.forgot=async()=>{const e=val('au-e').trim();if(!e){toast('اكتب إيميلك الأول');return}const {error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin+location.pathname});toast(error?error.message:'اتبعتلك رسالة لتغيير كلمة السر')};
 A_AUTH.logout=async()=>{await sb.auth.signOut();lsDel(PIN_KEY());location.hash='';location.reload()};
-async function afterLogin(fresh){const {data}=await sb.auth.getSession();SESSION=data.session;if(!SESSION){showLogin();return}
+async function afterLogin(fresh){const {data}=await sb.auth.getSession();SESSION=data.session;if(!SESSION){const off=await offlineSession();if(!off){showLogin();return}SESSION=off}
  document.getElementById('app').innerHTML='<div class="loading">بيحمّل البيانات...</div>';
  await loadAll();const u=me();
  if(!u.id){authShell(`<h2>حسابك لسه مش مفعّل</h2><p class="muted">اطلب من المالك يضيفك من «المستخدمين والصلاحيات».</p><button class="btn sec" data-a="logout">خروج</button>`);return}
@@ -1596,3 +1596,25 @@ const _staffDetailBase=A.staffDetail;
 A.staffDetail=el=>{_staffDetailBase(el);const w=staffOf(el.dataset.v);if(!me().owner)return;const box=document.querySelector('.sheet .between');if(!box)return;
  const u=w.userId?S.users.find(x=>x.id===w.userId):null;
  box.insertAdjacentHTML('afterend',w.userId?`<p class="small" style="margin:4px 0 0">📱 بيسجل من موبايله: <span style="direction:ltr;unicode-bidi:embed">${esc(u?.email||'')}</span> <button class="btn ghost sm" data-a="userPwd" data-v="${w.userId}">كلمة سر جديدة</button></p>`:`<div style="margin-top:6px"><button class="btn sm" data-a="staffLogin" data-v="${w.id}">📱 اعمل له حساب بصمة</button></div>`)};
+
+// ---- offline: read-only from last loaded data ----
+const IDB={db:null,open(){return new Promise((res,rej)=>{if(this.db)return res(this.db);const r=indexedDB.open('melt-cache',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{this.db=r.result;res(this.db)};r.onerror=()=>rej(r.error)})},
+ async get(k){try{const db=await this.open();return await new Promise(res=>{const t=db.transaction('kv').objectStore('kv').get(k);t.onsuccess=()=>res(t.result||null);t.onerror=()=>res(null)})}catch(e){return null}},
+ async set(k,v){try{const db=await this.open();db.transaction('kv','readwrite').objectStore('kv').put(v,k)}catch(e){}},
+ async del(k){try{const db=await this.open();db.transaction('kv','readwrite').objectStore('kv').delete(k)}catch(e){}}};
+const cacheKey=()=>'S:'+(SESSION&&SESSION.user&&SESSION.user.id||'');
+function setOffline(on,at){S.offline=!!on;let b=document.getElementById('offline-bar');if(!on){if(b)b.remove();document.body.style.paddingTop='';return}
+ if(!b){b=document.createElement('div');b.id='offline-bar';b.setAttribute('role','status');b.style.cssText='position:fixed;top:0;inset-inline:0;z-index:9999;background:#8a3b12;color:#fff;font-size:13px;text-align:center;padding:6px 12px;line-height:1.5';document.body.appendChild(b)}
+ b.textContent='⚠️ مفيش نت. دي آخر بيانات اتحملت'+(at?' ('+new Date(at).toLocaleString('ar-EG',{weekday:'short',hour:'2-digit',minute:'2-digit'})+')':'')+'. التسجيل متوقف لحد ما النت يرجع.';document.body.style.paddingTop=b.offsetHeight+'px'}
+async function netOk(){if(!navigator.onLine)return false;try{const {error}=await sb.from('settings').select('id').limit(1);return !(error&&/fetch|network|timeout|load failed/i.test(error.message))}catch(e){return false}}
+async function useCache(){const c=await IDB.get(cacheKey());if(!c){if(!S.ready){document.getElementById('app').innerHTML=`<div class="auth"><div class="card" style="max-width:420px;margin:60px auto;text-align:center"><h2>مفيش نت</h2><p class="muted">ومفيش بيانات محفوظة على الجهاز ده لسه. أول ما النت يرجع افتح السيستم مرة، وبعد كده هيعرض آخر بيانات لو النت فصل.</p><button class="btn" onclick="location.reload()">جرّب تاني</button></div></div>`;throw new Error('offline-nocache')}setOffline(true,S.offlineAt);return}
+ S=c.S;S.ready=true;S.offlineAt=c.at;recalc();setOffline(true,c.at)}
+const _loadAllNet=loadAll;
+loadAll=async function(){if(!(await netOk())){if(S.ready){setOffline(true,S.offlineAt||S.loadedAt);return}return useCache()}
+ _netErr=false;await _loadAllNet();if(_netErr){return useCache()}
+ S.loadedAt=new Date().toISOString();S.offlineAt=null;setOffline(false);try{localStorage.setItem('melt-last-uid',SESSION.user.id)}catch(e){}
+ try{IDB.set(cacheKey(),{at:S.loadedAt,S:JSON.parse(JSON.stringify(S))})}catch(e){}};
+async function offlineSession(){if(navigator.onLine)return null;let uid=null;try{uid=localStorage.getItem('melt-last-uid')}catch(e){}if(!uid)return null;const c=await IDB.get('S:'+uid);return c?{user:{id:uid},offline:true}:null}
+window.addEventListener('offline',()=>{if(S.ready)setOffline(true,S.loadedAt)});
+window.addEventListener('online',()=>{setTimeout(async()=>{try{const {data}=await sb.auth.getSession();if(data.session)SESSION=data.session;if(S.ready&&!LOCKED){await refresh();if(!S.offline)toast('النت رجع واتحدّثت البيانات')}}catch(e){}},1500)});
+const _logoutBase=A_AUTH.logout;A_AUTH.logout=A.logout=async()=>{try{await IDB.del(cacheKey());localStorage.removeItem('melt-last-uid')}catch(e){}await _logoutBase()};
