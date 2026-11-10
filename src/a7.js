@@ -22,13 +22,13 @@ A.euDel=el=>{matRead();EM.units.splice(+el.dataset.i,1);matSheet()};
 // package-count inputs (count & opening). pk = {u0:n,u1:n,...,loose:x}
 function pkQty(m,pk){if(!pk)return null;const L=looseInfo(m.base);let q=0,any=false;pkgs(m).forEach((p,j)=>{const v=pk['u'+j];if(v!==''&&v!=null){q+=(+v)*p.s;any=true}});if(pk.loose!==''&&pk.loose!=null){q+=(+pk.loose)*L.f;any=true}return any?q:null}
 function pkgInputs(pre,m,pk,act,cur){if(!m)return '';pk=pk||{};const L=looseInfo(m.base);const q=pkQty(m,pk);
- return `<div class="row" style="flex-wrap:wrap;gap:4px;justify-content:flex-end">${pkgs(m).map((p,j)=>`<label class="small" style="display:flex;align-items:center;gap:3px"><input type="number" class="inp-sm" style="width:58px" id="${pre}-${m.id}-u${j}" value="${pk['u'+j]??''}" min="0" step="any" data-chg="${act}" data-v="${m.id}">${esc(p.n)}</label>`).join('')}
- ${pkgs(m).length===1&&m.size===L.f?'':`<label class="small" style="display:flex;align-items:center;gap:3px">+<input type="number" class="inp-sm" style="width:64px" id="${pre}-${m.id}-l" value="${pk.loose??''}" min="0" step="0.01" data-chg="${act}" data-v="${m.id}">${L.l} فكة</label>`}
+ return `<div class="row" style="flex-wrap:wrap;gap:4px;justify-content:flex-end">${pkgs(m).map((p,j)=>`<label class="small" style="display:flex;align-items:center;gap:3px"><input type="number" class="inp-sm" style="width:58px" id="${pre}-${m.id}-u${j}" value="${pk['u'+j]??''}" min="0" step="any" data-chg="${act}" data-live="${act}" data-v="${m.id}">${esc(p.n)}</label>`).join('')}
+ ${pkgs(m).length===1&&m.size===L.f?'':`<label class="small" style="display:flex;align-items:center;gap:3px">+<input type="number" class="inp-sm" style="width:64px" id="${pre}-${m.id}-l" value="${pk.loose??''}" min="0" step="0.01" data-chg="${act}" data-live="${act}" data-v="${m.id}">${L.l} فكة</label>`}
  <span class="small muted" id="${pre}-${m.id}-t" style="min-width:90px">${q!=null?'= '+fmt(q/L.f,2)+' '+L.l:(cur!=null&&cur!==''?'= '+fmt(cur/L.f,2)+' '+L.l:'')}</span></div>`}
 function pkRead(pre,m){const pk={};pkgs(m).forEach((p,j)=>{const v=val(pre+'-'+m.id+'-u'+j);if(v!=='')pk['u'+j]=+v});const l=val(pre+'-'+m.id+'-l');if(l!=='')pk.loose=+l;return pk}
 A.cntPk=el=>{const m=mat(el.dataset.v);const k=today().slice(0,7);const c=S.counts[k]=S.counts[k]||{status:'draft',items:{}};const pk=pkRead('cp',m);const q=pkQty(m,pk);
  if(q==null){delete c.items['m:'+m.id];delete c.items['mb:'+m.id]}else{c.items['m:'+m.id]=+q.toFixed(4);c.items['mb:'+m.id]=pk}
- const L=looseInfo(m.base);const t=document.getElementById('cp-'+m.id+'-t');if(t)t.textContent=q!=null?'= '+fmt(q/L.f,2)+' '+L.l:'';
+ const L=looseInfo(m.base);const t=document.getElementById('cp-'+m.id+'-t');if(t)t.textContent=q!=null?'= '+fmt(q/L.f,2)+' '+L.l:'';cntRefreshCell('m:'+m.id);
  clearTimeout(_cntT);_cntT=setTimeout(async()=>{await dbx(sb.from('stock_counts').upsert({month:k,status:c.status==='approved'?'approved':'draft',items:c.items,updated_at:new Date().toISOString()},{onConflict:'month'}))},800)};
 
 // ---- opening balance ----
@@ -36,13 +36,13 @@ function openingTab(){const op=S.settings.opening||{};const it=op.items||{};cons
  const val0=Object.values(it).reduce((s,v)=>s+(v.qty||0)*(v.cost||0),0);
  return `<div class="card"><div class="between"><h2>رصيد أول المدة</h2>${op.at?`<span class="pill ok">متسجل · ${esc(op.by||'')} · ${dShort(op.date)}</span>`:'<span class="pill warn">لسه</span>'}</div>
  <p class="sub">اكتب الموجود يوم بداية السيستم. لو عدّلت بعد كده، الفرق بس هو اللي بيتظبط في الرصيد (المشتريات والفواتير اللي اتسجلت ما بتتأثرش). قيمته بتبقى مخزون أول المدة لأول إقفال.</p>
- ${!own?'<div class="lock">🔒 رصيد أول المدة للمالك بس</div>':`<div class="field" style="max-width:220px"><label for="op-d">تاريخ رصيد أول المدة</label><input id="op-d" type="date" value="${op.date||curMonth()+'-01'}" max="${today()}"></div>
+ ${!own?'<div class="lock">🔒 رصيد أول المدة للمالك بس</div>':`<div class="row" style="align-items:flex-end;gap:10px"><div class="field" style="max-width:200px"><label for="op-d">تاريخ رصيد أول المدة</label><input id="op-d" type="date" value="${op.date||curMonth()+'-01'}" max="${today()}"></div><div class="field" style="flex:1;min-width:180px"><label for="op-q">بحث</label><input id="op-q" type="text" data-live="opFilter" placeholder="اكتب اسم الصنف..."></div><button class="btn" data-a="opNew">+ صنف جديد</button></div>
  <h3 style="margin-top:12px">خامات وتغليف</h3><div class="tbl-wrap"><table><tr><th>الخامة</th><th class="n">الموجود (عبوات + فكة)</th>${sc?'<th class="n">تكلفة العبوة الأساسية</th>':''}</tr>
- ${S.materials.map(m=>{const x=it['m:'+m.id];return `<tr><td>${esc(m.name)}<div class="small muted">${esc(m.pu)} = ${fmt(m.size/L(m).f,2)} ${L(m).l}</div></td><td class="n">${pkgInputs('op',m,x&&x.pk,'opPk',x&&x.qty)}</td>${sc?`<td class="n"><input type="number" class="inp-sm" id="opc-m-${m.id}" value="${x&&x.cost?+(x.cost*m.size).toFixed(2):(m.avg?+(m.avg*m.size).toFixed(2):'')}" style="width:90px"></td>`:''}</tr>`}).join('')||'<tr><td colspan="3" class="empty">ضيف الخامات الأول</td></tr>'}</table></div>
+ ${S.materials.map(m=>{const x=it['m:'+m.id];return `<tr class="op-row" data-q="${esc(m.name)}"><td>${esc(m.name)}<div class="small muted">${esc(m.pu)} = ${fmt(m.size/L(m).f,2)} ${L(m).l}</div></td><td class="n">${pkgInputs('op',m,x&&x.pk,'opPk',x&&x.qty)}</td>${sc?`<td class="n"><input type="number" class="inp-sm" id="opc-m-${m.id}" value="${x&&x.cost?+(x.cost*m.size).toFixed(2):(m.avg?+(m.avg*m.size).toFixed(2):'')}" style="width:90px"></td>`:''}</tr>`}).join('')||'<tr><td colspan="3" class="empty">ضيف الخامات الأول</td></tr>'}</table></div>
  <h3 style="margin-top:12px">نص مصنع</h3><div class="tbl-wrap"><table><tr><th>المكون</th><th class="n">الموجود</th>${sc?'<th class="n">التكلفة (من الوصفة)</th>':''}</tr>
- ${S.recipes.map(r=>{const x=it['r:'+r.id];const lf=r.out==='g'?{l:'كيلو',f:1000}:{l:unitLbl(r.out),f:1};return `<tr><td>${esc(r.name)}</td><td class="n"><input type="number" class="inp-sm" id="opq-r-${r.id}" value="${x?+(x.qty/lf.f).toFixed(3):''}" step="0.01" style="width:90px"> ${lf.l}</td>${sc?`<td class="n small">${money(recInfo(r.id).unit*lf.f,2)} / ${lf.l}</td>`:''}</tr>`}).join('')||'<tr><td colspan="3" class="empty">مفيش</td></tr>'}</table></div>
+ ${S.recipes.map(r=>{const x=it['r:'+r.id];const lf=r.out==='g'?{l:'كيلو',f:1000}:{l:unitLbl(r.out),f:1};return `<tr class="op-row" data-q="${esc(r.name)}"><td>${esc(r.name)}</td><td class="n"><input type="number" class="inp-sm" id="opq-r-${r.id}" value="${x?+(x.qty/lf.f).toFixed(3):''}" step="0.01" style="width:90px"> ${lf.l}</td>${sc?`<td class="n small">${money(recInfo(r.id).unit*lf.f,2)} / ${lf.l}</td>`:''}</tr>`}).join('')||'<tr><td colspan="3" class="empty">مفيش</td></tr>'}</table></div>
  <h3 style="margin-top:12px">منتج تام</h3><div class="tbl-wrap"><table><tr><th>المنتج</th><th class="n">عدد القطع</th>${sc?'<th class="n">تكلفة القطعة</th>':''}</tr>
- ${S.products.map(p=>{const x=it['p:'+p.id];return `<tr><td>${esc(p.name)}</td><td class="n"><input type="number" class="inp-sm" id="opq-p-${p.id}" value="${x?x.qty:''}" style="width:80px"></td>${sc?`<td class="n small">${money(pcost(p).mat,2)}</td>`:''}</tr>`}).join('')||'<tr><td colspan="3" class="empty">مفيش</td></tr>'}</table></div>
+ ${S.products.map(p=>{const x=it['p:'+p.id];return `<tr class="op-row" data-q="${esc(p.name)}"><td>${esc(p.name)}</td><td class="n"><input type="number" class="inp-sm" id="opq-p-${p.id}" value="${x?x.qty:''}" style="width:80px"></td>${sc?`<td class="n small">${money(pcost(p).mat,2)}</td>`:''}</tr>`}).join('')||'<tr><td colspan="3" class="empty">مفيش</td></tr>'}</table></div>
  ${sc&&op.at?`<div class="kpi" style="margin-top:12px"><div class="l">قيمة رصيد أول المدة المتسجل</div><div class="v">${money(val0)}</div></div>`:''}
  <button class="btn block" style="margin-top:12px" data-a="openingSave">حفظ رصيد أول المدة</button>`}</div>`}
 A.opPk=el=>{const m=mat(el.dataset.v);const q=pkQty(m,pkRead('op',m));const L=looseInfo(m.base);const t=document.getElementById('op-'+m.id+'-t');if(t)t.textContent=q!=null?'= '+fmt(q/L.f,2)+' '+L.l:''};
@@ -129,3 +129,36 @@ const _homeBk=V.home;V.home=()=>{let html=_homeBk();if(!me().owner||!S.ready)ret
  return `<div class="alert ${lb?'bad':'warn'}" style="margin-bottom:12px"><span class="dot"></span><div><b>النسخة الاحتياطية</b><div class="small">${msg}. اتأكد إن سكريبت جوجل شغال.</div></div></div>`+html};
 const _prefsBk=V.prefs;V.prefs=()=>{const h=_prefsBk();if(!me().owner)return h;const lb=S.lastBackup;
  return h+`<div class="card" style="margin-top:12px"><h2>النسخة الاحتياطية</h2><p class="sub">${lb?'آخر نسخة: '+new Date(lb.at).toLocaleString('ar-EG')+' · '+fmt(lb.bytes/1024,0)+' KB':'لسه مفيش نسخة اتعملت'}</p><p class="small muted">بتتعمل كل يوم الساعة 6 الصبح على Google Drive وبتوصلك على Gmail.</p></div>`};
+
+// ---- count: live difference ----
+function cntRow(kind,id){if(kind==='m'){const m=mat(id);if(!m)return null;const L=looseInfo(m.base);return {q:m.stock,uc:m.avg||0,f:q=>fmt(q/L.f,2)+' '+L.l}}
+ if(kind==='r'){const r=rec(id);if(!r)return null;const lf=r.out==='g'?{l:'كيلو',f:1000}:{l:unitLbl(r.out),f:1};return {q:r.stock,uc:recInfo(id).unit,f:q=>fmt(q/lf.f,2)+' '+lf.l}}
+ const p=prod(id);if(!p)return null;return {q:p.stock,uc:pcost(p).mat,f:q=>fmt(q)+' قطعة'}}
+function cntDiffHTML(kind,id,a){if(a==null||a==='')return '<span class="muted">—</span>';const r=cntRow(kind,id);if(!r)return '';const d=a-r.q;
+ if(Math.abs(d)<1e-6)return '<span class="up">✓ مطابق</span>';const cls=d<0?'down':'up';
+ return `<span class="${cls} b">${d<0?'عجز ':'زيادة '}${r.f(Math.abs(d))}</span>${can('cost')?`<div class="small ${cls}">${d<0?'−':'+'}${fmt(Math.abs(d*r.uc))} ج</div>`:''}`}
+function cntTotalsHTML(){const k=today().slice(0,7);const c=S.counts[k]||{items:{}};let loss=0,gain=0,n=0,dif=0;
+ Object.entries(c.items||{}).forEach(([key,v])=>{if(!/^[mrp]:/.test(key)||v===''||v==null)return;const [kind,id]=key.split(':');const r=cntRow(kind,id);if(!r)return;n++;const dq=v-r.q;if(Math.abs(dq)>1e-6)dif++;const dv=dq*r.uc;if(dv<0)loss-=dv;else gain+=dv});
+ const total=S.materials.length+S.recipes.length+S.products.length;
+ return `<div class="grid4">${kpi('اتجرد',n+' من '+total)}${kpi('فيهم فرق',`${dif}`,'',{cls:dif?'down':'up'})}${can('cost')?kpi('إجمالي العجز',`<span class="down">${money(loss)}</span>`)+kpi('إجمالي الزيادة',`<span class="up">${money(gain)}</span>`):''}</div>`}
+function cntRefreshCell(key){const [kind,id]=key.split(':');const c=S.counts[today().slice(0,7)]||{items:{}};const td=document.getElementById('cd-'+kind+'-'+id);if(td)td.innerHTML=cntDiffHTML(kind,id,c.items[key]);const t=document.getElementById('cnt-tot');if(t)t.innerHTML=cntTotalsHTML()}
+
+// ---- opening: search + new item ----
+A.opFilter=el=>{const q=el.value.trim().toLowerCase();document.querySelectorAll('.op-row').forEach(tr=>tr.hidden=!!q&&!tr.dataset.q.toLowerCase().includes(q))};
+A.opNew=()=>sheet(`<h2>صنف جديد برصيد أول المدة</h2><p class="sub">بيتضاف للخامات ورصيده بيتسجل في نفس اللحظة. المنتجات والنص مصنع بتتضاف من شاشاتها علشان محتاجة وصفة.</p>
+ <div class="fgrid"><div class="field full"><label for="on-n">الاسم</label><input id="on-n" type="text"></div>
+ <div class="field"><label for="on-c">النوع</label><select id="on-c"><option value="raw">خامة</option><option value="pack">تغليف</option></select></div>
+ <div class="field"><label for="on-b">وحدة الوصفة</label><select id="on-b" data-chg="onBase">${['g','ml','pc','m'].map(u=>`<option value="${u}">${unitLbl(u)}</option>`).join('')}</select></div>
+ <div class="field"><label for="on-pu">العبوة</label><input id="on-pu" type="text" placeholder="شوال 25ك، جالون، كرتونة 100..."></div>
+ <div class="field"><label for="on-s"><span id="on-s-l">العبوة فيها كام كيلو</span></label><input id="on-s" type="number" step="any"></div>
+ <div class="field"><label for="on-q">الموجود (عدد العبوات)</label><input id="on-q" type="number" step="any"></div>
+ <div class="field"><label for="on-l"><span id="on-l-l">+ فكة (كيلو)</span></label><input id="on-l" type="number" step="any"></div>
+ ${can('cost')?`<div class="field full"><label for="on-cost">تكلفة العبوة</label><input id="on-cost" type="number" step="any"></div>`:''}</div>
+ <button class="btn block" style="margin-top:12px" data-a="opNewSave">إضافة وتسجيل الرصيد</button>`);
+A.onBase=el=>{const L=looseInfo(el.value);document.getElementById('on-s-l').textContent='العبوة فيها كام '+L.l;document.getElementById('on-l-l').textContent='+ فكة ('+L.l+')'};
+A.opNewSave=async()=>{if(_busy)return;const n=val('on-n').trim(),base=val('on-b'),L=looseInfo(base),pu=val('on-pu').trim()||L.l,sz=num('on-s');
+ if(!n){toast('اكتب الاسم');return}if(sz<=0){toast('اكتب العبوة فيها كام '+L.l);return}if(S.materials.some(m=>m.name.trim()===n)){toast('فيه صنف بنفس الاسم، دوّر عليه في القايمة');return}
+ const size=sz*L.f,q=num('on-q')*size+num('on-l')*L.f,cost=num('on-cost');const id=uuid();
+ _busy=true;try{await dbx(sb.from('materials').insert({id,name:n,cat:val('on-c'),base,pu,size,units:[],stock:0,min_stock:0}));
+  if(q>0||cost>0)await rpc('set_opening',{p:{date:(S.settings.opening||{}).date||val('op-d')||today(),items:[{kind:'m',id,qty:+q.toFixed(4),unit_cost:cost?+(cost/size).toFixed(6):0,pk:{u0:num('on-q')||'',loose:num('on-l')||''}}]}});
+  closeSheet();await refresh();toast('اتضاف '+n+(q>0?' برصيد '+fmt(q/L.f,2)+' '+L.l:''))}finally{_busy=false}};
