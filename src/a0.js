@@ -51,7 +51,7 @@ async function loadAll(){
  S.cashLog=cash.map(c=>({d:c.d,t:c.treasury_id,amt:N(c.amount),note:c.note,by:(S.users.find(u=>u.id===c.user_id)||{}).name||''}));
  S.suppliers=sups.map(s=>({id:s.id,name:s.name,phone:s.phone||'',terms:s.terms||'كاش',days:s.days||0,opening:N(s.opening_balance),info:s.info||{}}));
  const cm=Object.fromEntries(costs.map(c=>[c.material_id,c]));
- S.materials=mats.filter(m=>m.active!==false).map(m=>{const c=cm[m.id]||{};return {id:m.id,name:m.name,cat:m.cat,base:m.base,pu:m.pu,size:N(m.size)||1,units:Array.isArray(m.units)?m.units.filter(u=>u&&u.n&&+u.s>0).map(u=>({n:u.n,s:+u.s})):[],stock:N(m.stock),min:N(m.min_stock),avg:N(c.avg_cost),
+ S.materials=mats.filter(m=>m.active!==false).map(m=>{const c=cm[m.id]||{};return {id:m.id,name:m.name,cat:m.cat,base:m.base,pu:m.pu,size:N(m.size)||1,pw:N(m.pw),units:Array.isArray(m.units)?m.units.filter(u=>u&&u.n&&+u.s>0).map(u=>({n:u.n,s:+u.s})):[],stock:N(m.stock),min:N(m.min_stock),avg:N(c.avg_cost),
   last:c.last_price!=null?{s:c.last_supplier,b:c.last_quality||'',p:N(c.last_price),d:c.last_date}:null,
   prices:mprices.filter(p=>p.material_id===m.id).map(p=>({id:p.id,s:p.supplier_id,b:p.quality||'',p:N(p.price)})),
   hist:hist.filter(h=>h.material_id===m.id).map(h=>({d:h.d,s:h.supplier_id,b:h.quality||'',p:N(h.price)}))}});
@@ -59,9 +59,9 @@ async function loadAll(){
  S.purchases=purs.map(p=>({id:p.id,no:p.no,d:p.d,s:p.supplier_id,paid:N(p.paid),t:p.treasury_id,notes:p.notes||'',lines:plines.filter(l=>l.purchase_id===p.id).map(l=>({mid:l.material_id,q:N(l.qty),p:N(l.price),b:l.quality||''}))}));
  S.supPay=spays.map(p=>({id:p.id,d:p.d,s:p.supplier_id,amt:N(p.amount),t:p.treasury_id}));
  S.recipes=recs.map(r=>({id:r.id,name:r.name,out:r.out_unit,yield:N(r.yield),byproduct:r.byproduct,src:r.src_recipe,by:r.by_recipe?{id:r.by_recipe,q:N(r.by_qty)}:null,stock:N(r.stock),
-  inputs:rins.filter(i=>i.recipe_id===r.id).map(i=>({k:i.kind,id:i.item_id,q:N(i.qty)}))}));
+  inputs:rins.filter(i=>i.recipe_id===r.id).map(i=>({k:i.kind,id:i.item_id,q:N(i.qty),u:i.unit||''}))}));
  S.products=prods.map(p=>({id:p.id,name:p.name,en:p.en||'',brand:p.brand,cat:p.cat,price:N(p.price),ppc:p.ppc||1,w:N(p.weight)||1,slices:p.slices,finish:p.finish||'',menu:p.menu||{},stock:N(p.stock),
-  comps:pcomps.filter(c=>c.product_id===p.id&&!c.is_pack).map(c=>({k:c.kind,id:c.item_id,q:N(c.qty)})),
+  comps:pcomps.filter(c=>c.product_id===p.id&&!c.is_pack).map(c=>({k:c.kind,id:c.item_id,q:N(c.qty),u:c.unit||''})),
   pack:pcomps.filter(c=>c.product_id===p.id&&c.is_pack).map(c=>({k:'m',id:c.item_id,q:N(c.qty),perCarton:c.per_carton}))}));
  S.priceLog=plog.map(l=>({d:l.d,pid:l.product_id,old:N(l.old_price),nw:N(l.new_price),how:l.how||'',by:l.user_name||''}));
  S.customers=custs.map(c=>({id:c.id,name:c.name,brand:c.brand,kind:c.kind,type:c.type||'',phone:c.phone||'',pay:c.pay,days:c.days||0,limit:N(c.credit_limit),disc:N(c.disc),special:c.special||{},info:c.info||{},active:c.active!==false}));

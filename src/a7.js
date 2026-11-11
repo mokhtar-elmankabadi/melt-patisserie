@@ -12,11 +12,15 @@ function pkgFmt(m,q){if(!m)return '';q=+q||0;const L=looseInfo(m.base);if(m.size
 function puF(m,u){const p=pkgs(m)[u||0];return p&&m?p.s/(m.size||1):1}
 function puUnitName(m,u){const p=pkgs(m)[u||0];return p?p.n:''}
 function puUnitSel(m,l,i){const ps=pkgs(m);if(ps.length<2)return '';return `<select id="pl-u-${i}" data-chg="puCheck" style="width:110px" aria-label="العبوة">${ps.map((p,j)=>`<option value="${j}" ${(l.u||0)===j?'selected':''}>${esc(p.n)}</option>`).join('')}</select>`}
-function puConv(m,l){if(!m||!l.q)return '';const L=looseInfo(m.base);const tot=l.q*pkgs(m)[l.u||0].s;return ` = ${fmt(tot/L.f,2)} ${L.l}`}
+function puQ(m,l){if(!m)return +l.q||0;const p=pkgs(m)[l.u||0]||{s:m.size||1};return (+l.q||0)+(+l.l||0)*looseInfo(m.base).f/p.s}
+function puConv(m,l){if(!m||!puQ(m,l))return '';const L=looseInfo(m.base);const tot=puQ(m,l)*pkgs(m)[l.u||0].s;return ` = ${fmt(tot/L.f,2)} ${L.l}`}
+function compShowQ(x){if(x.k==='m'&&x.u==='g'){const m=mat(x.id);if(m&&m.pw>0)return +(x.q*m.pw).toFixed(3)}return x.q}
+function compUnitSel(x,prefix,i){const m=x.k==='m'?mat(x.id):null;if(!(m&&m.base==='pc'&&m.pw>0))return '';return `<select id="${prefix}-u-${i}" style="width:74px" aria-label="الوحدة"><option value="">قطعة</option><option value="g" ${x.u==='g'?'selected':''}>جرام</option></select>`}
+A.emBase=()=>{EM.base=val('em-b');matRead();matSheet()};
 function unitsEditor(m){const L=looseInfo(m.base);return `<h3 style="margin-top:12px">عبوات تانية للخامة دي ${ti('لو الخامة بتيجي بأكتر من عبوة: جالون وكرتونة، أو شوال 25 وشوال 50. كل عبوة بكميتها بوحدة الوصفة. وقت الشرا والجرد هتختار العبوة، والسيستم يحوّل لوحده')}</h3>
- <p class="small muted">العبوة الأساسية: <b>${esc(m.pu||'')}</b> = ${fmt(m.size)} ${unitLbl(m.base)} (أسعار الموردين محسوبة عليها)</p>
- ${(m.units||[]).map((u,i)=>`<div class="row" style="flex-wrap:nowrap;margin-bottom:6px"><input type="text" id="eu-n-${i}" value="${esc(u.n)}" placeholder="اسم العبوة (كرتونة، شوال 50...)" style="flex:1"><input type="number" id="eu-s-${i}" value="${u.s||''}" placeholder="فيها كام ${unitLbl(m.base)}" style="width:120px"><button class="icon-btn" data-a="euDel" data-i="${i}" aria-label="حذف">×</button></div>`).join('')}
- <button class="btn sec sm" data-a="euAdd">+ عبوة</button>${L.f>1?`<p class="small muted" style="margin-top:4px">مثال: كرتونة فيها 4 جوالين 4 لتر = ${fmt(16*L.f)} ${unitLbl(m.base)}</p>`:''}`}
+ <p class="small muted">العبوة الأساسية: <b>${esc(m.pu||'')}</b> = ${fmt((m.size||0)/L.f,3)} ${L.l} (أسعار الموردين محسوبة عليها)</p>
+ ${(m.units||[]).map((u,i)=>`<div class="row" style="flex-wrap:nowrap;margin-bottom:6px"><input type="text" id="eu-n-${i}" value="${esc(u.n)}" placeholder="اسم العبوة (كرتونة، شوال 50...)" style="flex:1"><input type="number" step="any" id="eu-s-${i}" value="${u.s?+(u.s/L.f).toFixed(4):''}" placeholder="فيها كام ${L.l}" style="width:120px"><button class="icon-btn" data-a="euDel" data-i="${i}" aria-label="حذف">×</button></div>`).join('')}
+ <button class="btn sec sm" data-a="euAdd">+ عبوة</button><p class="small muted" style="margin-top:4px">مثال: ${m.base==='ml'?'كرتونة فيها 4 جوالين 4 لتر = 16':m.base==='g'?'شوال 50 = 50':m.base==='pc'?'كرتونة فيها 12 طبق بيض = 360':'لفة = 100'} ${L.l}</p>`}
 A.euAdd=()=>{matRead();EM.units=(EM.units||[]).concat([{n:'',s:0}]);matSheet()};
 A.euDel=el=>{matRead();EM.units.splice(+el.dataset.i,1);matSheet()};
 // package-count inputs (count & opening). pk = {u0:n,u1:n,...,loose:x}
