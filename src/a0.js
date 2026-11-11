@@ -64,7 +64,7 @@ async function loadAll(){
   comps:pcomps.filter(c=>c.product_id===p.id&&!c.is_pack).map(c=>({k:c.kind,id:c.item_id,q:N(c.qty),u:c.unit||''})),
   pack:pcomps.filter(c=>c.product_id===p.id&&c.is_pack).map(c=>({k:'m',id:c.item_id,q:N(c.qty),perCarton:c.per_carton}))}));
  S.priceLog=plog.map(l=>({d:l.d,pid:l.product_id,old:N(l.old_price),nw:N(l.new_price),how:l.how||'',by:l.user_name||''}));
- S.customers=custs.map(c=>({id:c.id,name:c.name,brand:c.brand,kind:c.kind,type:c.type||'',phone:c.phone||'',pay:c.pay,days:c.days||0,limit:N(c.credit_limit),disc:N(c.disc),special:c.special||{},info:c.info||{},active:c.active!==false}));
+ S.customers=custs.map(c=>({id:c.id,opening:N(c.opening_balance),name:c.name,brand:c.brand,kind:c.kind,type:c.type||'',phone:c.phone||'',pay:c.pay,days:c.days||0,limit:N(c.credit_limit),disc:N(c.disc),special:c.special||{},info:c.info||{},active:c.active!==false}));
  S.couriers=cours.map(c=>({id:c.id,name:c.name,kind:c.kind,phone:c.phone||'',salary:N(c.salary),comm:N(c.comm),commOn:c.comm_on,perOrder:N(c.per_order),userId:c.user_id,active:c.active!==false}));
  S.orders=ords.map(o=>({id:o.id,outAt:o.out_at,brand:o.brand,no:o.no,inv:o.inv_no,cu:o.cu,date:o.d,due:o.due||'',status:o.status,courier:o.courier_id,fee:N(o.fee),feeOn:o.fee_on,discType:o.disc_type,discVal:N(o.disc_val),extras:o.extras||[],notes:o.notes||'',approvalReason:o.approval_reason||'',approvedBy:o.approved_by||'',
   sub:N(o.sub),custDisc:N(o.cust_disc),discAmt:N(o.disc_amt),odisc:N(o.odisc),extrasTotal:N(o.extras_total),feeCharged:N(o.fee_charged),total:N(o.total),cost:N(o.cost),stockOut:o.stock_out,
