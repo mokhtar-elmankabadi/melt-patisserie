@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='3.1.0 · العبوات والتواريخ';const APP_BATCH=3;
+const APP_VERSION='3.2.1 · الاستيراد والكيبورد';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================
@@ -136,7 +136,7 @@ async function afterLogin(fresh){const {data}=await sb.auth.getSession();SESSION
  startApp()}
 function startApp(){LOCKED=false;const h=(location.hash||'').slice(1);if(SCREENS.some(s=>s.id===h&&s.b<=APP_BATCH))VIEW=h;if(!canSee(VIEW)&&S.myCourier)VIEW='orders';else if(!canSee(VIEW)&&S.myStaff)VIEW='me';render();armIdle()}
 function pinPad(title,sub,act,extra){PIN_BUF='';authShell(`<h2 style="margin:6px 0 2px">${title}</h2><p class="small muted">${sub}</p><div class="pin-dots" id="pdots">${'<i></i>'.repeat(6)}</div>
- <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-a="pinKey" data-v="${n}">${n}</button>`).join('')}<button data-a="pinKey" data-v="del" aria-label="مسح">⌫</button><button data-a="pinKey" data-v="0">0</button><button data-a="pinKey" data-v="ok" data-next="${act}" aria-label="تأكيد">✓</button></div>${extra||''}`)}
+ <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-a="pinKey" data-v="${n}">${n}</button>`).join('')}<button data-a="pinKey" data-v="del" aria-label="مسح">⌫</button><button data-a="pinKey" data-v="0">0</button><button data-a="pinKey" data-v="ok" data-next="${act}" aria-label="تأكيد">✓</button></div>${extra||''}<p class="small muted kb-hint" style="margin-top:10px">⌨️ على الكمبيوتر تقدر تكتب الرمز بالكيبورد وتدوس Enter</p>`)}
 function showPinSetup(){pinPad('اختار رمز سري','من 4 لـ 6 أرقام، بيفتح بيه السيستم على الجهاز ده من غير الإيميل','pinSet1',`<button class="btn ghost sm" style="margin-top:10px" data-a="pinSkip">تخطي دلوقتي</button>`)}
 function showLock(){const bio=lsGet(BIO_KEY());pinPad('أهلاً '+esc(me().name),'اكتب رمزك السري','pinCheck',`${bio?'<button class="btn sec block" style="margin-top:12px" data-a="bioUnlock">الدخول بالبصمة</button>':''}<button class="btn ghost sm" style="margin-top:8px" data-a="logout">دخول بحساب تاني</button>`);LOCKED=true;if(bio)setTimeout(()=>A_AUTH.bioUnlock(),300)}
 let PIN_FIRST='',PIN_TRIES=0;

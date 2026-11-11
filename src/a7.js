@@ -169,6 +169,6 @@ A.opNewSave=async()=>{if(_busy)return;const n=val('on-n').trim(),base=val('on-b'
 
 // ---- keyboard for PIN pad (computer) ----
 document.addEventListener('keydown',e=>{const pad=document.querySelector('.pad');if(!pad||e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t&&/INPUT|TEXTAREA|SELECT/.test(t.tagName))return;
- const k=e.key.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));let btn=null;
+ const cm=(e.code||'').match(/^(?:Digit|Numpad)([0-9])$/);const k=cm?cm[1]:(e.code==='NumpadEnter'?'Enter':e.key.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)));let btn=null;
  if(/^[0-9]$/.test(k))btn=pad.querySelector(`[data-a="pinKey"][data-v="${k}"]`);else if(k==='Backspace'||k==='Delete')btn=pad.querySelector('[data-a="pinKey"][data-v="del"]');else if(k==='Enter')btn=pad.querySelector('[data-a="pinKey"][data-v="ok"]');
  if(btn){e.preventDefault();btn.click();btn.classList.add('kb');setTimeout(()=>btn.classList.remove('kb'),120)}});
