@@ -638,7 +638,7 @@ A.saveOpenings=async()=>{for(const t of S.treasuries){const v=num('to-'+t.id);if
 
 // ================= BOOT =================
 (async function boot(){try{const t=lsGet('melt-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
- Object.assign(A,A_AUTH);if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+ Object.assign(A,A_AUTH);if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{try{r.update()}catch(e){}}).catch(()=>{});navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtl&&!window.__swReload&&!document.querySelector('.sheet-open, input:focus')){window.__swReload=1;location.reload()}})}
  sb.auth.onAuthStateChange((ev,s)=>{if(ev==='PASSWORD_RECOVERY'){SESSION=s;authShell(`<h2>كلمة سر جديدة</h2><div class="field" style="text-align:right"><label for="np-p">كلمة السر (8 حروف على الأقل)</label><input id="np-p" type="password" style="direction:ltr"></div><button class="btn block" style="margin-top:12px" data-a="setNewPwd">حفظ</button>`)}});
  const {data}=await sb.auth.getSession();if(data.session)afterLogin(false);else showLogin()})();
 A_AUTH.setNewPwd=async()=>{const p=val('np-p');if(p.length<8){toast('8 حروف على الأقل');return}const {error}=await sb.auth.updateUser({password:p});if(error){toast(error.message);return}toast('اتغيرت كلمة السر');afterLogin(true)};
