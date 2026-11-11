@@ -190,3 +190,4 @@ details.acc>summary::-webkit-details-marker{display:none}
 .pad button{height:58px;border-radius:14px;border:1px solid var(--line);background:var(--surface2);font-size:22px;font-family:var(--f-num);cursor:pointer}
 .soon{font-size:10.5px;border:1px solid var(--line2);border-radius:6px;padding:0 5px;color:var(--dim)}
 .loading{display:grid;place-items:center;min-height:60vh;color:var(--muted)}
+.pad button.kb{background:var(--accent);color:#fff;transform:scale(.96)}

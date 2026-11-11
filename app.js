@@ -1666,6 +1666,12 @@ A.opNewSave=async()=>{if(_busy)return;const n=val('on-n').trim(),base=val('on-b'
  _busy=true;try{await dbx(sb.from('materials').insert({id,name:n,cat:val('on-c'),base,pu,size,units:[],stock:0,min_stock:0}));
   if(q>0||cost>0)await rpc('set_opening',{p:{date:(S.settings.opening||{}).date||val('op-d')||today(),items:[{kind:'m',id,qty:+q.toFixed(4),unit_cost:cost?+(cost/size).toFixed(6):0,pk:{u0:num('on-q')||'',loose:num('on-l')||''}}]}});
   closeSheet();await refresh();toast('اتضاف '+n+(q>0?' برصيد '+fmt(q/L.f,2)+' '+L.l:''))}finally{_busy=false}};
+
+// ---- keyboard for PIN pad (computer) ----
+document.addEventListener('keydown',e=>{const pad=document.querySelector('.pad');if(!pad||e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t&&/INPUT|TEXTAREA|SELECT/.test(t.tagName))return;
+ const k=e.key.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));let btn=null;
+ if(/^[0-9]$/.test(k))btn=pad.querySelector(`[data-a="pinKey"][data-v="${k}"]`);else if(k==='Backspace'||k==='Delete')btn=pad.querySelector('[data-a="pinKey"][data-v="del"]');else if(k==='Enter')btn=pad.querySelector('[data-a="pinKey"][data-v="ok"]');
+ if(btn){e.preventDefault();btn.click();btn.classList.add('kb');setTimeout(()=>btn.classList.remove('kb'),120)}});
 // ================= IMPORT / EXPORT (Excel) =================
 let _xlsxP=null;
 function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(_xlsxP)return _xlsxP;_xlsxP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(window.XLSX);s.onerror=()=>{_xlsxP=null;rej(new Error('مقدرتش أحمّل مكتبة Excel، اتأكد من النت'))};document.head.appendChild(s)});return _xlsxP}
