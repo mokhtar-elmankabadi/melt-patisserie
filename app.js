@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='3.2.1 · الاستيراد والكيبورد';const APP_BATCH=3;
+const APP_VERSION='3.2.2 · تغيير كلمة السر';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================
@@ -237,6 +237,7 @@ A.soon=el=>{const s=SCREENS.find(x=>x.id===el.dataset.v);toast('«'+s.t+'» هت
 A.userMenu=()=>sheet(`<h2>${esc(me().name)}</h2><p class="sub">${esc(me().role||'')} · ${esc(me().email||SESSION.user.email||'')}</p><div class="list">
  <div class="li click" data-a="lockNow"><div class="main"><div class="t">قفل السيستم دلوقتي</div><div class="s">يفتح تاني بالرمز السري أو البصمة</div></div></div>
  <div class="li click" data-a="newPin"><div class="main"><div class="t">تغيير الرمز السري / تفعيل البصمة</div></div></div>
+ <div class="li click" data-a="myPwd"><div class="main"><div class="t">تغيير كلمة السر</div><div class="s">اللي بتدخل بيها بالإيميل على أي جهاز</div></div></div>
  <div class="li click" data-a="logout"><div class="main"><div class="t down">تسجيل خروج</div><div class="s">هتحتاج الإيميل وكلمة السر تاني</div></div></div></div><p class="small muted">${APP_VERSION}</p>`);
 function dateLine(){const d=new Date();const days=['الأحد','الاتنين','التلات','الأربع','الخميس','الجمعة','السبت'];return (VIEW==='home'?'صباح الخير · ':'')+days[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()}
 function head(title,sub,actions){return `<div class="phead"><div><div class="eyebrow">${dateLine()}</div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}</div>${actions?`<div class="row">${actions}</div>`:''}</div>`}
@@ -1672,6 +1673,19 @@ document.addEventListener('keydown',e=>{const pad=document.querySelector('.pad')
  const cm=(e.code||'').match(/^(?:Digit|Numpad)([0-9])$/);const k=cm?cm[1]:(e.code==='NumpadEnter'?'Enter':e.key.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)));let btn=null;
  if(/^[0-9]$/.test(k))btn=pad.querySelector(`[data-a="pinKey"][data-v="${k}"]`);else if(k==='Backspace'||k==='Delete')btn=pad.querySelector('[data-a="pinKey"][data-v="del"]');else if(k==='Enter')btn=pad.querySelector('[data-a="pinKey"][data-v="ok"]');
  if(btn){e.preventDefault();btn.click();btn.classList.add('kb');setTimeout(()=>btn.classList.remove('kb'),120)}});
+
+// ---- change my own password ----
+A.myPwd=()=>sheet(`<h2>تغيير كلمة السر</h2><p class="sub">${esc(SESSION.user.email||'')}</p><div class="fgrid">
+ <div class="field full"><label for="mp-o">كلمة السر الحالية</label><input id="mp-o" type="password" autocomplete="current-password" style="direction:ltr"></div>
+ <div class="field full"><label for="mp-n">كلمة السر الجديدة (8 حروف على الأقل)</label><input id="mp-n" type="password" autocomplete="new-password" style="direction:ltr"></div>
+ <div class="field full"><label for="mp-c">اكتبها تاني</label><input id="mp-c" type="password" autocomplete="new-password" style="direction:ltr"></div>
+ <div class="field full"><label class="small"><input type="checkbox" data-chg="mpShow"> إظهار كلمات السر</label></div></div>
+ <button class="btn block" style="margin-top:12px" data-a="myPwdSave">حفظ كلمة السر الجديدة</button>`);
+A.mpShow=el=>{['mp-o','mp-n','mp-c'].forEach(id=>{const i=document.getElementById(id);if(i)i.type=el.checked?'text':'password'})};
+A.myPwdSave=async()=>{if(_busy)return;const o=val('mp-o'),n=val('mp-n'),c=val('mp-c');
+ if(!o){toast('اكتب كلمة السر الحالية');return}if(n.length<8){toast('الجديدة 8 حروف على الأقل');return}if(n!==c){toast('كلمتين السر الجديدة مش زي بعض');return}if(n===o){toast('الجديدة زي القديمة');return}
+ _busy=true;try{const em=SESSION.user.email;const r1=await sb.auth.signInWithPassword({email:em,password:o});if(r1.error){toast('كلمة السر الحالية غلط');return}if(r1.data&&r1.data.session)SESSION=r1.data.session;
+  const r2=await sb.auth.updateUser({password:n});if(r2.error){toast('مقدرتش أغيّرها: '+r2.error.message);return}closeSheet();toast('اتغيرت كلمة السر ✓ استخدم الجديدة من أي جهاز')}finally{_busy=false}};
 // ================= IMPORT / EXPORT (Excel) =================
 let _xlsxP=null;
 function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(_xlsxP)return _xlsxP;_xlsxP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(window.XLSX);s.onerror=()=>{_xlsxP=null;rej(new Error('مقدرتش أحمّل مكتبة Excel، اتأكد من النت'))};document.head.appendChild(s)});return _xlsxP}

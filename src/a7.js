@@ -172,3 +172,16 @@ document.addEventListener('keydown',e=>{const pad=document.querySelector('.pad')
  const cm=(e.code||'').match(/^(?:Digit|Numpad)([0-9])$/);const k=cm?cm[1]:(e.code==='NumpadEnter'?'Enter':e.key.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)));let btn=null;
  if(/^[0-9]$/.test(k))btn=pad.querySelector(`[data-a="pinKey"][data-v="${k}"]`);else if(k==='Backspace'||k==='Delete')btn=pad.querySelector('[data-a="pinKey"][data-v="del"]');else if(k==='Enter')btn=pad.querySelector('[data-a="pinKey"][data-v="ok"]');
  if(btn){e.preventDefault();btn.click();btn.classList.add('kb');setTimeout(()=>btn.classList.remove('kb'),120)}});
+
+// ---- change my own password ----
+A.myPwd=()=>sheet(`<h2>تغيير كلمة السر</h2><p class="sub">${esc(SESSION.user.email||'')}</p><div class="fgrid">
+ <div class="field full"><label for="mp-o">كلمة السر الحالية</label><input id="mp-o" type="password" autocomplete="current-password" style="direction:ltr"></div>
+ <div class="field full"><label for="mp-n">كلمة السر الجديدة (8 حروف على الأقل)</label><input id="mp-n" type="password" autocomplete="new-password" style="direction:ltr"></div>
+ <div class="field full"><label for="mp-c">اكتبها تاني</label><input id="mp-c" type="password" autocomplete="new-password" style="direction:ltr"></div>
+ <div class="field full"><label class="small"><input type="checkbox" data-chg="mpShow"> إظهار كلمات السر</label></div></div>
+ <button class="btn block" style="margin-top:12px" data-a="myPwdSave">حفظ كلمة السر الجديدة</button>`);
+A.mpShow=el=>{['mp-o','mp-n','mp-c'].forEach(id=>{const i=document.getElementById(id);if(i)i.type=el.checked?'text':'password'})};
+A.myPwdSave=async()=>{if(_busy)return;const o=val('mp-o'),n=val('mp-n'),c=val('mp-c');
+ if(!o){toast('اكتب كلمة السر الحالية');return}if(n.length<8){toast('الجديدة 8 حروف على الأقل');return}if(n!==c){toast('كلمتين السر الجديدة مش زي بعض');return}if(n===o){toast('الجديدة زي القديمة');return}
+ _busy=true;try{const em=SESSION.user.email;const r1=await sb.auth.signInWithPassword({email:em,password:o});if(r1.error){toast('كلمة السر الحالية غلط');return}if(r1.data&&r1.data.session)SESSION=r1.data.session;
+  const r2=await sb.auth.updateUser({password:n});if(r2.error){toast('مقدرتش أغيّرها: '+r2.error.message);return}closeSheet();toast('اتغيرت كلمة السر ✓ استخدم الجديدة من أي جهاز')}finally{_busy=false}};

@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='3.2.1 · الاستيراد والكيبورد';const APP_BATCH=3;
+const APP_VERSION='3.2.2 · تغيير كلمة السر';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================

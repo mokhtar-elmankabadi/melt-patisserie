@@ -81,6 +81,7 @@ A.soon=el=>{const s=SCREENS.find(x=>x.id===el.dataset.v);toast('«'+s.t+'» هت
 A.userMenu=()=>sheet(`<h2>${esc(me().name)}</h2><p class="sub">${esc(me().role||'')} · ${esc(me().email||SESSION.user.email||'')}</p><div class="list">
  <div class="li click" data-a="lockNow"><div class="main"><div class="t">قفل السيستم دلوقتي</div><div class="s">يفتح تاني بالرمز السري أو البصمة</div></div></div>
  <div class="li click" data-a="newPin"><div class="main"><div class="t">تغيير الرمز السري / تفعيل البصمة</div></div></div>
+ <div class="li click" data-a="myPwd"><div class="main"><div class="t">تغيير كلمة السر</div><div class="s">اللي بتدخل بيها بالإيميل على أي جهاز</div></div></div>
  <div class="li click" data-a="logout"><div class="main"><div class="t down">تسجيل خروج</div><div class="s">هتحتاج الإيميل وكلمة السر تاني</div></div></div></div><p class="small muted">${APP_VERSION}</p>`);
 function dateLine(){const d=new Date();const days=['الأحد','الاتنين','التلات','الأربع','الخميس','الجمعة','السبت'];return (VIEW==='home'?'صباح الخير · ':'')+days[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()}
 function head(title,sub,actions){return `<div class="phead"><div><div class="eyebrow">${dateLine()}</div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}</div>${actions?`<div class="row">${actions}</div>`:''}</div>`}
