@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='3.2.5 · موظف من غير مواعيد';const APP_BATCH=3;
+const APP_VERSION='3.2.6 · ميعاد الإيجار';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================
@@ -1203,7 +1203,7 @@ V.closing=()=>{if(!can('profit'))return head('الإقفال والتقارير'
  ${m.counted&&m.std&&m.cogs>(m.std+(m.retCost||0))*1.03?`<div class="alert bad" style="margin-top:8px"><span class="dot"></span><div>التكلفة الفعلية أعلى من الوصفات بـ ${pct(m.cogs/(m.std+(m.retCost||0))-1)}. راجع الهدر أو الكميات في الوصفات أو فروق الجرد.</div></div>`:''}
  ${m.closed?'':`<div class="card" style="margin-top:12px"><h2>قبل الإقفال</h2><div class="list" style="margin-top:6px">${ck.map(x=>`<div class="li click" data-a="go" data-v="${x.go}"${x.tab?` data-tab="${x.tab}"`:''}><div class="main"><div class="t">${x.ok?'✅':x.hard?'⛔':'⚠️'} ${x.t}</div><div class="s">${esc(x.d)}</div></div></div>`).join('')}</div>
   <h3 style="margin-top:12px">مصروفات ثابتة ما اتدفعتش (تتسجل مستحق على الشهر) ${ti('اكتب المبلغ لو المصروف يخص الشهر ده ولسه ما اتدفعش. سيبه 0 لو مش عليه حاجة')}</h3>
-  ${fixedMissing.map(cat=>`<div class="row" style="flex-wrap:nowrap;margin-bottom:6px"><span style="flex:1">${esc(cat)}${lastAmt(cat)?` <span class="muted small">(آخر مرة ${fmt(lastAmt(cat))})</span>`:''}</span><input type="number" class="inp-sm" id="acr-${esc(cat)}" value="0" style="width:100px" data-live="clRecalc"></div>`).join('')||'<p class="small muted">كل المصروفات الثابتة اتسجلت للشهر ده.</p>'}
+  ${fixedMissing.map(cat=>`<div class="row" style="flex-wrap:nowrap;margin-bottom:6px"><span style="flex:1">${esc(cat)}${lastAmt(cat)?` <span class="muted small">(آخر مرة ${fmt(lastAmt(cat))})</span>`:''}</span><input type="number" class="inp-sm" id="acr-${esc(cat)}" value="${((S.settings.fixedPlan||{})[cat]||{}).amt||0}" style="width:100px" data-live="clRecalc"></div>`).join('')||'<p class="small muted">كل المصروفات الثابتة اتسجلت للشهر ده.</p>'}
   <div class="row" style="flex-wrap:nowrap;margin-bottom:6px"><input type="text" id="acr-x-n" placeholder="مستحق تاني (اختياري)" style="flex:1"><input type="number" class="inp-sm" id="acr-x" value="0" style="width:100px" data-live="clRecalc"></div>
   ${S.accruals.filter(a=>a.m===k).map(a=>`<div class="small muted">مسجل: ${esc(a.cat)} ${fmt(a.amt)}</div>`).join('')}</div>`}
  <div class="card" style="margin-top:12px"><h2>توزيع الأرباح</h2>${m.closed?'':`<div class="fgrid" style="margin-top:8px"><div class="field"><label for="cl-res">يتحجز للمصنع (تطوير، معدات، احتياطي)</label><input id="cl-res" type="number" value="${reserve}" data-live="clRes" data-v="${k}"></div><div class="field small muted" style="justify-content:flex-end">الباقي بيتوزع بالنسب. نصيب كل شريك بيتسجل في حسابه الجاري، وهو يسحب أو يأجّل.</div></div>`}
@@ -1480,13 +1480,13 @@ V.prefs=()=>{const st=S.settings;const g=st.geo;if(!me().owner)return _prefsV();
  <div class="field full"><label>موقع المصنع ${ti('اقف جوه المصنع واضغط الزرار. الموظف مش هيقدر يسجل حضور غير لو جوه المسافة دي')}</label><div class="row"><button class="btn sec sm" data-a="setGeo">📍 حدد موقع المصنع من موبايلي</button><span class="small ${g?'up':'down'}">${g?'متحدد ('+(+g.lat).toFixed(5)+', '+(+g.lng).toFixed(5)+')':'لسه ما اتحددش'}</span>${g?`<a class="small" href="https://maps.google.com/?q=${g.lat},${g.lng}" target="_blank" rel="noopener">شوفه على الخريطة ↗</a>`:''}</div></div>
  <div class="field"><label for="s3-r">المسافة المسموحة (متر)</label><input id="s3-r" type="number" value="${g&&g.radius||st.radius||100}"></div><div class="field"><label for="s3-g">سماح التأخير (دقايق) ${ti('عدد الدقايق اللي ما بتتحسبش تأخير. 0 = أي تأخير بيتخصم')}</label><input id="s3-g" type="number" value="${st.graceMin||0}"></div>
  <div class="field"><label for="s3-oi">قيمة المخزون يوم بداية السيستم ${ti('بتستخدم كمخزون أول المدة لأول شهر يتقفل')}</label><input id="s3-oi" type="number" value="${st.openingInv||0}"></div><div class="field"><label for="s3-vm">مضاعفات التقييم (شهور)</label><input id="s3-vm" type="text" value="${(st.valMult||[24,36]).join('، ')}"></div>
- <div class="field full"><label for="s3-ec">بنود المصروفات</label><input id="s3-ec" type="text" value="${esc((st.expCats||[]).join('، '))}"></div><div class="field full"><label for="s3-fc">المصروفات الثابتة (بتتسأل عنها وقت الإقفال)</label><input id="s3-fc" type="text" value="${esc((st.fixedCats||[]).join('، '))}"></div>
+ <div class="field full"><label for="s3-ec">بنود المصروفات</label><input id="s3-ec" type="text" value="${esc((st.expCats||[]).join('، '))}"></div><div class="field full"><label for="s3-fp">مبلغ وميعاد المصروفات الثابتة ${ti('اكتب البند = المبلغ @ يوم الدفع، مثلاً: إيجار=3100@10. بيظهرلك تنبيه في الرئيسية لو عدّى ميعاده ولسه ما اتدفعش، وبيتكتب لوحده وقت الإقفال')}</label><input id="s3-fp" type="text" dir="rtl" value="${esc(Object.entries(st.fixedPlan||{}).map(([k,v])=>k+'='+v.amt+'@'+v.day).join('، '))}" placeholder="إيجار=3100@10"></div><div class="field full"><label for="s3-fc">المصروفات الثابتة (بتتسأل عنها وقت الإقفال)</label><input id="s3-fc" type="text" value="${esc((st.fixedCats||[]).join('، '))}"></div>
  <div class="field"><label for="s3-cp">تنبيه تغيّر سحب العميل لو أكتر من %</label><input id="s3-cp" type="number" value="${st.changePct}"></div><div class="field"><label for="s3-im">أقصى أيام سكون قبل تنبيه «العميل وقف»</label><input id="s3-im" type="number" value="${st.idleMax}"></div></div>
  <button class="btn" style="margin-top:12px" data-a="saveS3">حفظ</button></div>`;
  return _prefsV().replace('<div class="card" style="margin-top:16px"><h2>البراندات واللوجو</h2>',card+'<div class="card" style="margin-top:16px"><h2>البراندات واللوجو</h2>')};
 const splitList=s=>s.split(/[,،\n]/).map(x=>x.trim()).filter(Boolean);
 A.saveS3=async()=>{const r=Math.max(20,num('s3-r'));const geo=S.settings.geo?Object.assign({},S.settings.geo,{radius:r}):null;
- await saveSettings({radius:r,geo,graceMin:num('s3-g'),openingInv:num('s3-oi'),valMult:splitList(val('s3-vm')).map(Number).filter(x=>x>0),expCats:splitList(val('s3-ec')),fixedCats:splitList(val('s3-fc')),changePct:num('s3-cp')||20,idleMax:num('s3-im')||10});toast('اتحفظ')};
+ await saveSettings({radius:r,geo,graceMin:num('s3-g'),openingInv:num('s3-oi'),valMult:splitList(val('s3-vm')).map(Number).filter(x=>x>0),expCats:splitList(val('s3-ec')),fixedCats:splitList(val('s3-fc')),fixedPlan:Object.fromEntries(splitList(val('s3-fp')).map(x=>{const m=x.match(/^(.+?)\s*=\s*([\d.]+)\s*(?:@\s*(\d+))?$/);return m?[m[1].trim(),{amt:+m[2],day:+(m[3]||1)}]:null}).filter(Boolean)),changePct:num('s3-cp')||20,idleMax:num('s3-im')||10});toast('اتحفظ')};
 A.setGeo=()=>{if(!navigator.geolocation){toast('الجهاز ده مفيهوش تحديد موقع');return}toast('بيحدد الموقع...');navigator.geolocation.getCurrentPosition(async p=>{const r=num('s3-r')||S.settings.radius||100;
  await saveSettings({geo:{lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),radius:r,acc:Math.round(p.coords.accuracy),at:new Date().toISOString()}});toast('اتحدد موقع المصنع (دقة '+Math.round(p.coords.accuracy)+' متر)')},e=>toast(e.code===1?'اسمح بتحديد الموقع من إعدادات المتصفح':'مش قادر يحدد الموقع، جرّب تاني'),{enableHighAccuracy:true,timeout:20000,maximumAge:0})};
 
@@ -1696,6 +1696,11 @@ A.cntInR=el=>{const r=rec(el.dataset.v);if(!r)return;const k=today().slice(0,7);
  (r.units||[]).forEach((u,i)=>{const x=val('cnt-rx-'+r.id+'-'+i);if(x===''){delete c.items['rx:'+r.id+':'+i];return}any=true;c.items['rx:'+r.id+':'+i]=+x;tot+=(+x)*u.s});
  if(mv==='')delete c.items['rs:'+r.id];else c.items['rs:'+r.id]=+mv;
  const fake={value:any?String(+tot.toFixed(4)):'',dataset:{k:'r:'+r.id}};A.cntIn(fake)}
+
+// ---- fixed expenses due reminder (e.g. rent day 10) ----
+const _homeFx=V.home;V.home=()=>{let html=_homeFx();if(!S.ready||!can('cost'))return html;const plan=S.settings.fixedPlan||{};const k=today().slice(0,7);const day=+today().slice(8,10);
+ const due=Object.entries(plan).filter(([cat,v])=>v&&v.amt>0&&day>=(v.day||1)&&!S.expenses.some(e=>inMonth(e.d,k)&&e.cat===cat));
+ if(!due.length)return html;return due.map(([cat,v])=>`<div class="alert warn" style="margin-bottom:12px"><span class="dot"></span><div><b>${esc(cat)} ${fmt(v.amt)} ج</b><div class="small">ميعاده يوم ${v.day} ولسه ما اتسجلش مصروف للشهر ده</div></div></div>`).join('')+html};
 // ================= IMPORT / EXPORT (Excel) =================
 let _xlsxP=null;
 function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(_xlsxP)return _xlsxP;_xlsxP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(window.XLSX);s.onerror=()=>{_xlsxP=null;rej(new Error('مقدرتش أحمّل مكتبة Excel، اتأكد من النت'))};document.head.appendChild(s)});return _xlsxP}

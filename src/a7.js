@@ -193,3 +193,8 @@ A.cntInR=el=>{const r=rec(el.dataset.v);if(!r)return;const k=today().slice(0,7);
  (r.units||[]).forEach((u,i)=>{const x=val('cnt-rx-'+r.id+'-'+i);if(x===''){delete c.items['rx:'+r.id+':'+i];return}any=true;c.items['rx:'+r.id+':'+i]=+x;tot+=(+x)*u.s});
  if(mv==='')delete c.items['rs:'+r.id];else c.items['rs:'+r.id]=+mv;
  const fake={value:any?String(+tot.toFixed(4)):'',dataset:{k:'r:'+r.id}};A.cntIn(fake)}
+
+// ---- fixed expenses due reminder (e.g. rent day 10) ----
+const _homeFx=V.home;V.home=()=>{let html=_homeFx();if(!S.ready||!can('cost'))return html;const plan=S.settings.fixedPlan||{};const k=today().slice(0,7);const day=+today().slice(8,10);
+ const due=Object.entries(plan).filter(([cat,v])=>v&&v.amt>0&&day>=(v.day||1)&&!S.expenses.some(e=>inMonth(e.d,k)&&e.cat===cat));
+ if(!due.length)return html;return due.map(([cat,v])=>`<div class="alert warn" style="margin-bottom:12px"><span class="dot"></span><div><b>${esc(cat)} ${fmt(v.amt)} ج</b><div class="small">ميعاده يوم ${v.day} ولسه ما اتسجلش مصروف للشهر ده</div></div></div>`).join('')+html};
