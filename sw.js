@@ -1,4 +1,4 @@
-const C='melt-v16';const SHELL=['./','index.html','style.css?v=16','app.js?v=16','logo-melt.png','logo-moyou.png','icon-192.png','manifest.webmanifest'];
+const C='melt-v17';const SHELL=['./','index.html','style.css?v=17','app.js?v=17','logo-melt.png','logo-moyou.png','icon-192.png','manifest.webmanifest'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C&&k!==C+'-cdn').map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 const CDN=/^https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;

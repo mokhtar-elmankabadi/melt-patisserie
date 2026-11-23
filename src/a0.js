@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='3.2.3 · وزن اللتر';const APP_BATCH=3;
+const APP_VERSION='3.2.4 · جرد بالطبقة';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================
@@ -58,7 +58,7 @@ async function loadAll(){
  S.priceAlerts=alerts.map(a=>({id:a.id,d:a.d,mid:a.material_id,s:a.supplier_id,old:N(a.old_price),nw:N(a.new_price),pct:N(a.pct),res:a.resolution||''}));
  S.purchases=purs.map(p=>({id:p.id,no:p.no,d:p.d,s:p.supplier_id,paid:N(p.paid),t:p.treasury_id,notes:p.notes||'',lines:plines.filter(l=>l.purchase_id===p.id).map(l=>({mid:l.material_id,q:N(l.qty),p:N(l.price),b:l.quality||''}))}));
  S.supPay=spays.map(p=>({id:p.id,d:p.d,s:p.supplier_id,amt:N(p.amount),t:p.treasury_id}));
- S.recipes=recs.map(r=>({id:r.id,name:r.name,out:r.out_unit,yield:N(r.yield),byproduct:r.byproduct,src:r.src_recipe,by:r.by_recipe?{id:r.by_recipe,q:N(r.by_qty)}:null,stock:N(r.stock),
+ S.recipes=recs.map(r=>({id:r.id,units:Array.isArray(r.units)?r.units.filter(u=>u&&u.n&&+u.s>0).map(u=>({n:u.n,s:+u.s})):[],name:r.name,out:r.out_unit,yield:N(r.yield),byproduct:r.byproduct,src:r.src_recipe,by:r.by_recipe?{id:r.by_recipe,q:N(r.by_qty)}:null,stock:N(r.stock),
   inputs:rins.filter(i=>i.recipe_id===r.id).map(i=>({k:i.kind,id:i.item_id,q:N(i.qty),u:i.unit||''}))}));
  S.products=prods.map(p=>({id:p.id,name:p.name,en:p.en||'',brand:p.brand,cat:p.cat,price:N(p.price),ppc:p.ppc||1,w:N(p.weight)||1,slices:p.slices,finish:p.finish||'',menu:p.menu||{},stock:N(p.stock),
   comps:pcomps.filter(c=>c.product_id===p.id&&!c.is_pack).map(c=>({k:c.kind,id:c.item_id,q:N(c.qty),u:c.unit||''})),
