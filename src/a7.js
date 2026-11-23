@@ -51,7 +51,7 @@ function openingTab(){const op=S.settings.opening||{};const it=op.items||{};cons
  <button class="btn block" style="margin-top:12px" data-a="openingSave">حفظ رصيد أول المدة</button>`}</div>`}
 A.opPk=el=>{const m=mat(el.dataset.v);const q=pkQty(m,pkRead('op',m));const L=looseInfo(m.base);const t=document.getElementById('op-'+m.id+'-t');if(t)t.textContent=q!=null?'= '+fmt(q/L.f,2)+' '+L.l:''};
 A.openingSave=async()=>{if(_busy)return;const old=(S.settings.opening||{}).items||{};const items=[];
- S.materials.forEach(m=>{const pk=pkRead('op',m);const q=pkQty(m,pk);const k='m:'+m.id;if(q==null&&!old[k])return;const cp=num('opc-m-'+m.id);items.push({kind:'m',id:m.id,qty:+(q||0).toFixed(4),unit_cost:cp?+(cp/m.size).toFixed(6):(old[k]?old[k].cost:m.avg||0),pk})});
+ S.materials.forEach(m=>{let pk=pkRead('op',m);let q=pkQty(m,pk);const k='m:'+m.id;if(q==null){if(!old[k])return;q=old[k].qty;pk=old[k].pk||null}const cp=num('opc-m-'+m.id);items.push({kind:'m',id:m.id,qty:+(q||0).toFixed(4),unit_cost:cp?+(cp/m.size).toFixed(6):(old[k]?old[k].cost:m.avg||0),pk})});
  S.recipes.forEach(r=>{const v=val('opq-r-'+r.id);const k='r:'+r.id;const ex=(r.units||[]).reduce((t,u,i)=>t+(num('opa-r-'+r.id+'-'+i)||0)*u.s,0);if(v===''&&!ex&&!old[k])return;const f=r.out==='g'?1000:1;items.push({kind:'r',id:r.id,qty:+((+v||0)*f+ex).toFixed(4),unit_cost:+recInfo(r.id).unit.toFixed(6)})});
  S.products.forEach(p=>{const v=val('opq-p-'+p.id);const k='p:'+p.id;if(v===''&&!old[k])return;items.push({kind:'p',id:p.id,qty:+v||0,unit_cost:+pcost(p).mat.toFixed(4)})});
  if(!items.length){toast('اكتب الكميات الأول');return}if(!confirm('حفظ رصيد أول المدة وظبط الأرصدة؟'))return;
