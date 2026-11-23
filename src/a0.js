@@ -2,7 +2,7 @@
 // ================= CONFIG =================
 const SB_URL='https://puhpfyuvpmxzzigbssqv.supabase.co';
 const SB_KEY='sb_publishable_HvzQOXqGOp11jgTTBBPb0w_1Tem0xqN';
-const APP_VERSION='3.2.4 · جرد بالطبقة';const APP_BATCH=3;
+const APP_VERSION='3.2.5 · موظف من غير مواعيد';const APP_BATCH=3;
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
 // ================= UTILS =================
@@ -78,7 +78,7 @@ async function loadAll(){
  S.counts=Object.fromEntries(counts.map(c=>[c.month,{status:c.status,items:c.items||{},value:N(c.value),loss:N(c.var_loss),gain:N(c.var_gain),by:c.approved_by,at:c.approved_at}]));
  S.menuLog=mlog.map(m=>({d:m.d,brand:m.brand,cu:m.cu,layout:m.layout}));
  S.myCourier=S.couriers.find(c=>c.userId&&c.userId===SESSION?.user?.id)||null;
- S.staff=staff.map(w=>({id:w.id,name:w.name,job:w.job||'',phone:w.phone||'',type:w.type,salary:N(w.salary),payMode:w.pay_mode,start:w.shift_start||'16:00',end:w.shift_end||'00:00',userId:w.user_id,courier:w.courier_id,since:w.start_date,active:w.active!==false}));
+ S.staff=staff.map(w=>({id:w.id,name:w.name,job:w.job||'',phone:w.phone||'',type:w.type,salary:N(w.salary),payMode:w.pay_mode,start:w.shift_start||'16:00',end:w.shift_end||'00:00',userId:w.user_id,courier:w.courier_id,since:w.start_date,noAtt:!!w.no_att,active:w.active!==false}));
  S.att=att.map(a=>({id:a.id,w:a.staff_id,d:a.d,in:a.check_in,out:a.check_out,inDist:a.in_dist,outDist:a.out_dist,status:a.status,src:a.source,late:N(a.late_min),ot:N(a.ot_min),note:a.note||'',by:a.approved_by||''}));
  S.advances=advs.map(a=>({id:a.id,w:a.staff_id,d:a.d,amt:N(a.amount),t:a.treasury_id,mode:a.mode,inst:N(a.inst_amount),repaid:N(a.repaid),note:a.note||''}));
  S.adjust=sadj.map(a=>({id:a.id,w:a.staff_id,m:a.month,kind:a.kind,amt:N(a.amount),note:a.note||''}));

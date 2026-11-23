@@ -26,6 +26,7 @@ function attOf(w,d){return S.att.find(a=>a.w===w.id&&a.d===d)}
 function calcRange(w,from,to){const r={from,to,days:0,present:0,leave:0,absent:0,pending:0,late:0,ot:0,base:0,absDed:0,lateDed:0,otAdd:0,comm:0,bonus:0,deduct:0,adj:[],missing:0};
  const lim=to>today()?today():to;const hrs=shiftHrs(w);
  for(let d=from;d<=lim;d=daysAddISO(d,1)){if(isFri(d)||(w.since&&d<w.since))continue;r.days++;const k=d.slice(0,7);const dayRate=w.type==='monthly'?w.salary/workDays(k):w.salary;const hr=dayRate/hrs;const a=attOf(w,d);
+  if(w.noAtt){r.present++;r.base+=dayRate;continue}
   const st=a?a.status:'none';
   if(st==='approved'||st==='pending'){r.present++;if(st==='pending')r.pending++;r.late+=a.late;r.ot+=a.ot;r.lateDed+=a.late/60*hr;r.otAdd+=a.ot/60*hr;r.base+=dayRate}
   else if(st==='leave'){r.leave++;r.base+=w.type==='monthly'?dayRate:0}
@@ -123,12 +124,13 @@ A.editStaff=el=>{const w=el.dataset.v?staffOf(el.dataset.v):{id:'',name:'',job:'
  <div class="field"><label for="sf-a">ميعاد الحضور</label><input id="sf-a" type="time" value="${w.start}"></div><div class="field"><label for="sf-b">ميعاد الانصراف</label><input id="sf-b" type="time" value="${w.end}"></div>
  <div class="field"><label for="sf-since">بداية الشغل</label><input id="sf-since" type="date" value="${w.since||today()}"></div><div class="field"><label for="sf-u">بيسجل حضوره من موبايله بحساب ${ti('اعمله حساب من «المستخدمين والصلاحيات» من غير شاشات، واربطه هنا. هيشوف بس شاشة «حضوري ومرتبي»')}</label><select id="sf-u"><option value="">— لأ —</option>${S.users.filter(u=>!u.owner).map(u=>`<option value="${u.id}" ${w.userId===u.id?'selected':''}>${esc(u.name)}</option>`).join('')}</select></div>
  <div class="field"><label for="sf-c">مندوب؟ (للعمولة)</label><select id="sf-c"><option value="">— لأ —</option>${S.couriers.filter(c=>c.kind==='main').map(c=>`<option value="${c.id}" ${w.courier===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+ <div class="field full"><label class="small"><input type="checkbox" id="sf-na" ${w.noAtt?'checked':''}> من غير مواعيد (مدير): المرتب كامل، من غير خصم غياب أو تأخير</label></div>
  ${w.id?`<div class="field" style="justify-content:flex-end"><label class="small"><input type="checkbox" id="sf-act" ${w.active?'checked':''}> شغال</label></div>`:''}</div>
  <p class="small muted" style="margin-top:8px">سعر الساعة = ${w.type==='monthly'?'المرتب ÷ أيام الشغل في الشهر (من غير الجمع) ÷ ساعات الوردية':'اليومية ÷ ساعات الوردية'}. الغياب والتأخير بيتخصموا، والأوفر تايم بيتضاف بنفس سعر الساعة.</p>
  <button class="btn block" style="margin-top:12px" data-a="saveStaff" data-v="${w.id}">حفظ</button>`)};
 A.sfType=el=>{document.getElementById('sf-pm-w').hidden=el.value!=='daily';document.querySelector('label[for=sf-s]').textContent=el.value==='daily'?'اليومية':'المرتب الشهري'};
 A.saveStaff=async el=>{const n=val('sf-n').trim();if(!n){toast('اكتب الاسم');return}const t=val('sf-t');const act=document.getElementById('sf-act');
- await dbx(sb.from('staff').upsert({id:el.dataset.v||uuid(),name:n,job:val('sf-j'),phone:val('sf-ph'),type:t,salary:num('sf-s'),pay_mode:t==='monthly'?'monthly':val('sf-pm'),shift_start:val('sf-a')||'16:00',shift_end:val('sf-b')||'00:00',start_date:val('sf-since')||today(),user_id:val('sf-u')||null,courier_id:val('sf-c')||null,active:act?act.checked:true}));closeSheet();await refresh();toast('اتحفظ الموظف')};
+ await dbx(sb.from('staff').upsert({id:el.dataset.v||uuid(),name:n,job:val('sf-j'),phone:val('sf-ph'),type:t,salary:num('sf-s'),pay_mode:t==='monthly'?'monthly':val('sf-pm'),shift_start:val('sf-a')||'16:00',shift_end:val('sf-b')||'00:00',start_date:val('sf-since')||today(),user_id:val('sf-u')||null,courier_id:val('sf-c')||null,no_att:!!(document.getElementById('sf-na')||{}).checked,active:act?act.checked:true}));closeSheet();await refresh();toast('اتحفظ الموظف')};
 A.staffDetail=el=>{const w=staffOf(el.dataset.v);const P=TAB.payP&&TAB.payP.w===w.id?TAB.payP:Object.assign({w:w.id},nextPeriod(w));const r=calcRange(w,P.from,P.to);const adj=adjOpen(w,P.m);const g=grossOf(r,adj);const hr=(w.type==='monthly'?w.salary/workDays(P.m):w.salary)/shiftHrs(w);
  const advs=advOpen(w);const sug=a=>a.mode==='once'?a.amt-a.repaid:Math.min(a.inst,a.amt-a.repaid);
  sheet(`<div class="between"><h2>${esc(w.name)}</h2><button class="btn sec sm" data-a="editStaff" data-v="${w.id}">تعديل</button></div><p class="sub">${w.type==='monthly'?'مرتب '+money(w.salary):'يومية '+money(w.salary)} · وردية ${w.start}–${w.end} (${fmt(shiftHrs(w),1)} ساعة) · الساعة ${money(hr)}</p>
