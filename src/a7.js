@@ -15,7 +15,7 @@ function puUnitSel(m,l,i){const ps=pkgs(m);if(ps.length<2)return '';return `<sel
 function puQ(m,l){if(!m)return +l.q||0;const p=pkgs(m)[l.u||0]||{s:m.size||1};return (+l.q||0)+(+l.l||0)*looseInfo(m.base).f/p.s}
 function puConv(m,l){if(!m||!puQ(m,l))return '';const L=looseInfo(m.base);const tot=puQ(m,l)*pkgs(m)[l.u||0].s;return ` = ${fmt(tot/L.f,2)} ${L.l}`}
 function compShowQ(x){if(x.k==='m'&&x.u==='g'){const m=mat(x.id);if(m&&m.pw>0)return +(x.q*m.pw).toFixed(3)}return x.q}
-function compUnitSel(x,prefix,i){const m=x.k==='m'?mat(x.id):null;if(!(m&&m.base==='pc'&&m.pw>0))return '';return `<select id="${prefix}-u-${i}" style="width:74px" aria-label="الوحدة"><option value="">قطعة</option><option value="g" ${x.u==='g'?'selected':''}>جرام</option></select>`}
+function compUnitSel(x,prefix,i){const m=x.k==='m'?mat(x.id):null;if(!(m&&(m.base==='pc'||m.base==='ml')&&m.pw>0))return '';return `<select id="${prefix}-u-${i}" style="width:74px" aria-label="الوحدة"><option value="">${m.base==='ml'?'مللي':'قطعة'}</option><option value="g" ${x.u==='g'?'selected':''}>جرام</option></select>`}
 A.emBase=()=>{EM.base=val('em-b');matRead();matSheet()};
 function unitsEditor(m){const L=looseInfo(m.base);return `<h3 style="margin-top:12px">عبوات تانية للخامة دي ${ti('لو الخامة بتيجي بأكتر من عبوة: جالون وكرتونة، أو شوال 25 وشوال 50. كل عبوة بكميتها بوحدة الوصفة. وقت الشرا والجرد هتختار العبوة، والسيستم يحوّل لوحده')}</h3>
  <p class="small muted">العبوة الأساسية: <b>${esc(m.pu||'')}</b> = ${fmt((m.size||0)/L.f,3)} ${L.l} (أسعار الموردين محسوبة عليها)</p>
